@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glossaire · Web3, Blockchain & IA</title>
+  <style>
+    :root { color-scheme:dark; --bg:#09131c; --surface:#142831; --line:#34525a; --text:#f3faf9; --muted:#bdd1cf; --accent:#57e0cb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 85% -10%,#1b5360,transparent 38%),var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--accent); } a:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #ffe08a; outline-offset:3px; }
+    .wrap { max-width:1100px; width:calc(100% - 36px); margin:auto; }
+    header { padding:36px 0 28px; } .back { text-decoration:none; font-weight:700; }
+    h1 { font-size:clamp(2.2rem,5vw,4rem); letter-spacing:-.05em; line-height:1.1; margin:38px 0 12px; }
+    .intro { color:var(--muted); max-width:680px; margin:0; }
+    .controls { display:flex; gap:12px; flex-wrap:wrap; margin:26px 0 14px; }
+    input, select { background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--text); padding:12px 14px; font:inherit; }
+    input { flex:1 1 260px; } select { flex:0 1 190px; }
+    .count { color:var(--muted); margin:0 0 18px; }
+    .table-scroll { overflow-x:auto; border:1px solid var(--line); border-radius:16px; margin-bottom:40px; }
+    table { border-collapse:collapse; width:100%; min-width:690px; background:var(--surface); }
+    th { text-align:left; color:var(--accent); background:#18343d; }
+    th, td { padding:15px 17px; border-bottom:1px solid var(--line); vertical-align:top; }
+    tbody tr:last-child td { border-bottom:0; } tbody tr:hover { background:#1b3942; }
+    th:first-child, td:first-child { width:21%; font-weight:750; }
+    th:nth-child(2) { width:46%; } th:nth-child(3) { width:13%; } th:nth-child(4) { width:12%; }
+    .star { color:#ffe08a; margin-right:5px; } .small { color:var(--muted); font-size:.87rem; }
+    footer { border-top:1px solid var(--line); padding:24px 0 35px; color:var(--muted); }
+    @media(max-width:680px) { .table-scroll { overflow:visible; border:0; } table,tbody,tr,td { display:block; min-width:0; } thead { position:absolute; clip:rect(0 0 0 0); } tr { border:1px solid var(--line); border-radius:14px; margin:0 0 12px; background:var(--surface); overflow:hidden; } td { border:0; padding:5px 15px; } td:first-child { width:auto; padding-top:14px; font-size:1.1rem; } td:last-child { padding-bottom:14px; } td:nth-child(3) { color:var(--accent); } td::before { content:attr(data-label) " : "; font-weight:700; } td:first-child::before { content:""; } }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <a class="back" href="../../index.html">← Retour aux séances</a>
+    <h1>Glossaire</h1>
+    <p class="intro">Les mots clés déjà abordés dans la formation. ★ indique une notion prioritaire. Le glossaire évoluera au fil du cours.</p>
+  </header>
+  <main class="wrap">
+    <div class="controls">
+      <input id="recherche" type="search" placeholder="Rechercher un mot, une définition…" aria-label="Rechercher dans le glossaire" autocomplete="off">
+      <select id="filtre" aria-label="Filtrer par séance"><option value="">Toutes les séances publiées</option></select>
+    </div>
+    <p class="count" id="compteur" aria-live="polite"></p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Mot</th><th>Définition</th><th>Vu en séance</th><th>Prioritaire</th><th>Source</th></tr></thead>
+        <tbody id="lignes"></tbody>
+      </table>
+    </div>
+    <p id="aucun" hidden>Aucun mot trouvé.</p>
+
+  </main>
+  <footer><div class="wrap">Web3 · Blockchain · IA</div></footer>
+  <script>
+    "use strict";
+    // Réglage du formateur : modifier uniquement ce nombre après chaque séance.
+    // Les notions d'une séance supérieure et celles marquées "plus" sont masquées.
+    const derniereSeanceVue = 3;
+    // Pour ajouter un mot : copier une ligne ci-dessous et changer ses valeurs. La source est une URL https.
+    // seance:"plus" = masqué jusqu'à attribution d'un numéro de séance.
+    // Pour cacher une notion isolée, ajouter publie:false dans sa ligne.
+    // Pour la rendre visible, retirer publie:false (ou le remplacer par true).
+    const mots = [
+      {"mot":"Web 1.0","definition":"Période du Web où les sites servaient surtout à consulter des pages.","seance":"1","prioritaire":true,"attention":"Une période historique, pas une version officielle d’Internet.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Web 2.0","definition":"Web où les utilisateurs publient, échangent et interagissent sur des plateformes.","seance":"1","prioritaire":true,"attention":"Comptes et contenus dépendent souvent des plateformes.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Web3","definition":"Ensemble de services utilisant notamment les blockchains pour permettre des échanges et des actions vérifiables.","seance":"1","prioritaire":true,"attention":"La blockchain ne garantit pas à elle seule une décentralisation totale.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Protocole","definition":"Ensemble de règles communes permettant aux appareils de communiquer et de comprendre leurs échanges.","seance":"1","prioritaire":true,"attention":"HTTPS utilise HTTP avec une connexion sécurisée par TLS. Bitcoin possède aussi son protocole pour communiquer et vérifier les transactions.","source":"https://www.rfc-editor.org/rfc/rfc9110.html"},
+      {"mot":"Décentralisation","definition":"Répartition de fonctions ou de décisions entre plusieurs acteurs.","seance":"1","prioritaire":true,"attention":"Il existe différents degrés de décentralisation.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Pair à pair (P2P)","definition":"Échange direct entre ordinateurs d’un réseau, sans serveur central unique pour chaque échange.","seance":"plus","prioritaire":false,"attention":"Des intermédiaires peuvent subsister.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Blockchain / chaîne de blocs","definition":"Registre numérique partagé, organisé en blocs liés entre eux, dont les opérations sont vérifiées selon les règles du réseau.","seance":"1","prioritaire":true,"attention":"Les règles de validation varient selon le réseau.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Transaction","definition":"Action soumise à une blockchain, comme un transfert ou un appel de contrat.","seance":"2","prioritaire":true,"attention":"Soumise ne signifie pas confirmée.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Bloc","definition":"Ensemble de données ajouté à l’historique selon les règles du réseau.","seance":"2","prioritaire":true,"attention":"Son contenu précis dépend du protocole.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"En-tête de bloc (Bitcoin)","definition":"Partie du bloc contenant version, hachage précédent, racine de Merkle, horodatage, cible codée et nonce.","seance":"2","prioritaire":true,"attention":"Il ne contient pas les transactions complètes.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Hachage / empreinte (hash)","definition":"Résultat de longueur fixe calculé à partir de données.","seance":"2","prioritaire":true,"attention":"Une empreinte ne prouve pas que les données sont vraies.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Fonction de hachage","definition":"Calcul transformant des données en empreinte.","seance":"2","prioritaire":false,"attention":"Elle n’est normalement pas réversible.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Hachage du bloc précédent","definition":"Référence cryptographique reliant un bloc à son prédécesseur.","seance":"2","prioritaire":true,"attention":"Sur Bitcoin, il s’agit du hachage de l’en-tête précédent.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Racine de Merkle","definition":"Empreinte résumant les transactions d’un bloc via un arbre de hachages.","seance":"2","prioritaire":false,"attention":"Elle ne prouve pas la vérité d’une déclaration extérieure.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Nœud","definition":"Ordinateur ou logiciel participant au réseau pour recevoir, relayer ou vérifier des données.","seance":"2","prioritaire":false,"attention":"Tous les nœuds ne produisent pas des blocs.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Consensus","definition":"Règles permettant de s’accorder sur l’état valide de la chaîne.","seance":"2","prioritaire":false,"attention":"Il ne vérifie pas la réalité des faits hors chaîne.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Preuve de travail (PoW)","definition":"Mécanisme où des mineurs calculent pour proposer un bloc respectant une cible.","seance":"2","prioritaire":true,"attention":"Bitcoin l’utilise ; Ethereum emploie la preuve d’enjeu.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Nonce (Bitcoin)","definition":"Valeur de l’en-tête que le mineur fait varier pour chercher un hachage valide.","seance":"2","prioritaire":true,"attention":"Ce n’est pas le compteur des tentatives.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Cible de difficulté","definition":"Seuil que le hachage de l’en-tête Bitcoin doit respecter.","seance":"2","prioritaire":false,"attention":"Le nombre de « zéros devant » est une simplification.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Mineur (Bitcoin)","definition":"Acteur recherchant une preuve de travail valide pour proposer un bloc.","seance":"2","prioritaire":false,"attention":"Il ne peut imposer une transaction invalide aux nœuds.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Confirmation","definition":"Inclusion d’une transaction dans un bloc, suivie éventuellement d’autres blocs.","seance":"2","prioritaire":false,"attention":"Cela ne crée pas une vérité juridique.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Explorateur de blocs","definition":"Outil affichant les blocs et transactions publiés sur un réseau.","seance":"2","prioritaire":false,"attention":"Toujours vérifier le réseau consulté.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"TXID","definition":"Identifiant permettant de retrouver une transaction sur une chaîne.","seance":"2","prioritaire":false,"attention":"Vérifier aussi le réseau et le statut.","source":"https://developer.bitcoin.org/glossary.html"},
+      {"mot":"Wallet / portefeuille crypto","definition":"Application ou dispositif qui permet de consulter ses soldes, de gérer ses comptes et de préparer ou signer des opérations.","seance":"3","prioritaire":true,"attention":"Les soldes sont enregistrés sur la blockchain : les actifs ne sont pas des fichiers stockés dans le téléphone.","source":"https://ethereum.org/fr/wallets/"},
+      {"mot":"Adresse","definition":"Identifiant public à communiquer pour recevoir des actifs sur un réseau compatible.","seance":"3","prioritaire":true,"attention":"Ce n’est ni une clé privée ni un mot de passe. Une adresse peut permettre de consulter un historique public.","source":"https://ethereum.org/fr/developers/docs/accounts/"},
+      {"mot":"Clé privée","definition":"Secret cryptographique utilisé pour signer des opérations d’un compte classique.","seance":"3","prioritaire":true,"attention":"Celui qui la possède peut agir sur ce compte. Ne jamais la communiquer.","source":"https://ethereum.org/fr/developers/docs/accounts/"},
+      {"mot":"Phrase de récupération","definition":"Suite de mots permettant de retrouver les clés des comptes d’un wallet qui utilise ce mode de sauvegarde.","seance":"3","prioritaire":true,"attention":"Aussi appelée seed phrase ou Secret Recovery Phrase. Elle doit rester secrète ; les modalités de récupération diffèrent selon le type de wallet.","source":"https://support.metamask.io/start/learn/what-is-a-secret-recovery-phrase-and-how-to-keep-your-crypto-wallet-secure"},
+      {"mot":"Signature numérique","definition":"Résultat d’un calcul avec une clé privée permettant de vérifier qu’une opération a été autorisée par cette clé.","seance":"3","prioritaire":true,"attention":"Elle ne prouve pas l’identité civile de la personne. Une clé volée peut aussi servir à signer ; les autres règles du réseau doivent être respectées.","source":"https://ethereum.org/fr/developers/docs/accounts/"},
+      {"mot":"Coin","definition":"Autre terme utilisé pour un actif natif, comme BTC pour Bitcoin ou ETH pour Ethereum.","seance":"plus","prioritaire":false,"attention":"Le réseau et son actif sont deux notions différentes. Le vocabulaire courant peut être imprécis.","source":"https://ethereum.org/fr/developers/docs/intro-to-ether/"},
+      {"mot":"Token / jeton","definition":"Actif représenté par des règles sur une blockchain, souvent via un smart contract.","seance":"plus","prioritaire":false,"attention":"Les droits associés varient.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"NFT","definition":"Jeton non fongible distinguable des autres jetons.","seance":"plus","prioritaire":true,"attention":"Son achat ne transfère pas automatiquement le droit d’auteur.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Fongible","definition":"Dont les unités d’un même actif sont interchangeables : une unité compte comme une autre unité de cet actif.","seance":"3","prioritaire":true,"attention":"Exemple : 3 USDC représentent une quantité, pas trois objets numérotés. USDC et EURC sont deux actifs différents.","source":"https://ethereum.org/fr/stablecoins/"},
+      {"mot":"Mainnet","definition":"Réseau principal utilisé pour des opérations avec des actifs pouvant avoir une valeur économique.","seance":"3","prioritaire":false,"attention":"Le réseau principal et les réseaux de test ont des soldes et des historiques distincts.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"Testnet","definition":"Réseau de test utilisé pour s’entraîner ou tester un fonctionnement, comme Sepolia.","seance":"3","prioritaire":true,"attention":"Les ETH de test ne sont pas les ETH du réseau principal. L’exercice ne nécessite pas d’en acheter.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"Smart contract","definition":"Programme déployé sur une blockchain qui exécute des règles lorsqu’on l’appelle.","seance":"plus","prioritaire":true,"attention":"Ce n’est pas forcément un contrat juridique.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"dApp","definition":"Application dont une partie essentielle s’appuie sur des smart contracts ou un réseau décentralisé.","seance":"plus","prioritaire":true,"attention":"Lire peut être possible sans wallet ; signer nécessite souvent un wallet.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Gas","definition":"Sur Ethereum, le gas mesure les ressources nécessaires à l’exécution d’une opération.","seance":"3","prioritaire":false,"attention":"Le gas est une mesure ; les frais sont un montant payé en ETH. Une transaction incluse qui échoue peut quand même coûter des frais.","source":"https://ethereum.org/fr/developers/docs/gas/"},
+      {"mot":"DAO","definition":"Organisation dont certaines règles et décisions reposent sur des outils de gouvernance numériques.","seance":"plus","prioritaire":true,"attention":"Pouvoir des membres et statut juridique varient selon le projet.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Token de gouvernance","definition":"Jeton donnant parfois un droit de proposition ou de vote.","seance":"plus","prioritaire":false,"attention":"Un jeton ne signifie pas une personne, une voix.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"CEX","definition":"Plateforme d’échange exploitée par une entité centrale.","seance":"plus","prioritaire":false,"attention":"Elle peut détenir les actifs de ses clients.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"DEX","definition":"Service d’échange reposant principalement sur des smart contracts.","seance":"plus","prioritaire":false,"attention":"Certains de ses composants restent centralisés.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"DeFi","definition":"Services financiers bâtis sur des protocoles blockchain.","seance":"plus","prioritaire":false,"attention":"Les risques techniques et financiers demeurent.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Mint","definition":"Création d’un nouveau jeton selon les règles d’un contrat.","seance":"plus","prioritaire":false,"attention":"Créer un NFT ne place pas forcément son image sur la blockchain.","source":"https://ethereum.org/fr/glossary/"},
+      {"mot":"Actif","definition":"Élément de ton patrimoine qui a une valeur économique.","seance":"3","prioritaire":true,"attention":"Il peut s'agir d'un bien, d'une somme d'argent ou d'un droit ; il n'est pas nécessairement numérique ni facile à vendre.","source":"https://www.banque-france.fr/fr/publications-et-statistiques/publications/crypto-actifs-et-stable-coins"},
+      {"mot":"Cryptomonnaie","definition":"Terme courant pour désigner des crypto-actifs, comme BTC et ETH, échangés sur des réseaux blockchain.","seance":"3","prioritaire":false,"attention":"Leurs usages et leurs risques diffèrent. Leur nom ne suffit pas à identifier le réseau à utiliser.","source":"https://ethereum.org/fr/what-is-ethereum/"},
+      {"mot":"Internet","definition":"Réseau mondial de réseaux permettant aux appareils d’échanger des informations.","seance":"1","prioritaire":true,"attention":"Le Web utilise Internet.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Web","definition":"Ensemble de pages et de ressources reliées par des liens, généralement consultées avec un navigateur.","seance":"1","prioritaire":true,"attention":"Internet permet aussi d’autres services.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Navigateur","definition":"Logiciel permettant de consulter des sites web, comme Firefox, Chrome ou Safari.","seance":"1","prioritaire":true,"attention":"À distinguer du moteur de recherche.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Moteur de recherche","definition":"Service permettant de trouver des pages web à partir de mots ou de questions.","seance":"1","prioritaire":true,"attention":"Exemple : Google Search.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Site web","definition":"Ensemble de pages et de ressources accessibles à une adresse web.","seance":"1","prioritaire":true,"attention":"Exemple : Wikipédia.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Centralisation","definition":"Organisation dans laquelle un acteur conserve le contrôle des décisions essentielles d’un service.","seance":"1","prioritaire":true,"attention":"De nombreux serveurs peuvent dépendre du même acteur.","source":"https://ethereum.org/fr/web3/"},
+      {"mot":"Registre numérique","definition":"Ensemble organisé d’enregistrements conservés sous forme informatique, par exemple une liste de transferts.","seance":"1","prioritaire":true,"attention":"Tous les registres numériques ne sont pas des blockchains.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"IA générative","definition":"Système d’intelligence artificielle capable de produire du contenu, comme du texte, des images ou du son, à partir d’une demande.","seance":"1","prioritaire":true,"attention":"Une réponse convaincante peut être fausse.","source":"https://www.cnil.fr/fr/intelligence-artificielle/glossaire-ia"},
+      {"mot":"Réseau informatique","definition":"Ensemble d’appareils reliés pour échanger des informations.","seance":"1","prioritaire":false,"attention":"Internet relie plusieurs réseaux.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Serveur","definition":"Ordinateur ou logiciel qui fournit un service à d’autres appareils, par exemple l’accès à un site web.","seance":"1","prioritaire":false,"attention":"Un serveur n’est pas nécessairement une machine dédiée.","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Lien hypertexte","definition":"Élément cliquable permettant d’accéder à une autre page, à un document ou à une partie d’une page.","seance":"1","prioritaire":false,"attention":"Souvent appelé simplement « lien ».","source":"https://developer.mozilla.org/fr/docs/Glossary"},
+      {"mot":"Plateforme numérique","definition":"Service en ligne permettant aux utilisateurs d’effectuer des activités, comme publier, échanger ou acheter.","seance":"1","prioritaire":false,"attention":"Son fonctionnement et ses règles dépendent de son organisation.","source":"https://ethereum.org/fr/web3/"},
+      {"mot":"Actif numérique","definition":"Élément ou droit représenté sous forme numérique, que l’on peut détenir et qui peut avoir une valeur.","seance":"1","prioritaire":false,"attention":"La carte fictive illustre ce terme ; aucune valeur n’est garantie.","source":"https://ethereum.org/fr/web3/"},
+      {"mot":"Entraînement d’une IA","definition":"Étape pendant laquelle un modèle est ajusté à partir d’exemples pour apprendre des régularités.","seance":"1","prioritaire":false,"attention":"À distinguer de son utilisation pour répondre.","source":"https://www.cnil.fr/fr/intelligence-artificielle/glossaire-ia"},
+      {"mot":"Bitcoin / BTC","definition":"Bitcoin est le réseau ; BTC est le symbole du bitcoin, son actif natif.","seance":"3","prioritaire":true,"attention":"On peut transférer une fraction de BTC. Dans cette séance, BTC désigne l’actif natif du réseau Bitcoin.","source":"https://bitcoin.org/fr/vocabulaire"},
+      {"mot":"Ethereum / ether (ETH)","definition":"Ethereum est le réseau ; l’ether, de symbole ETH, est son actif natif.","seance":"3","prioritaire":true,"attention":"Sur Ethereum, les frais se paient en ETH. L’ETH est aussi utilisé sur certains réseaux liés à Ethereum : vérifier le réseau avant tout transfert.","source":"https://ethereum.org/fr/developers/docs/intro-to-ether/"},
+      {"mot":"Actif natif","definition":"Actif prévu directement par les règles d’un réseau blockchain, comme BTC pour Bitcoin ou ETH pour Ethereum.","seance":"3","prioritaire":true,"attention":"Un réseau peut aussi permettre l’échange d’autres actifs. Il faut distinguer l’actif du réseau qui l’utilise.","source":"https://ethereum.org/fr/developers/docs/intro-to-ether/"},
+      {"mot":"Stablecoin","definition":"Crypto-actif conçu pour suivre la valeur d’une référence, souvent une monnaie comme le dollar ou l’euro.","seance":"3","prioritaire":true,"attention":"La stabilité est un objectif, pas une garantie : des risques liés à l’émetteur, aux réserves et au fonctionnement subsistent.","source":"https://ethereum.org/fr/stablecoins/"},
+      {"mot":"USDC","definition":"Stablecoin émis par Circle, conçu pour suivre le dollar américain : environ 1 USDC pour 1 dollar.","seance":"3","prioritaire":false,"attention":"Il existe sur plusieurs réseaux. Avant un transfert, vérifier que l’expéditeur et le destinataire utilisent le même réseau compatible.","source":"https://www.circle.com/usdc"},
+      {"mot":"EURC","definition":"Stablecoin émis par Circle, conçu pour suivre l’euro : environ 1 EURC pour 1 euro.","seance":"3","prioritaire":false,"attention":"Il existe sur plusieurs réseaux. USDC et EURC suivent deux monnaies différentes et ne sont pas interchangeables entre eux.","source":"https://www.circle.com/eurc"},
+      {"mot":"Réseau blockchain","definition":"Ensemble de participants qui échangent et vérifient des opérations selon des règles communes, en maintenant un registre partagé.","seance":"3","prioritaire":true,"attention":"Un même actif peut être disponible sur plusieurs réseaux. Cela ne permet pas de transférer automatiquement d’un réseau à l’autre.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"Compte Ethereum (classique)","definition":"Compte identifié par une adresse, dont les opérations sont signées avec une clé privée.","seance":"3","prioritaire":false,"attention":"Un wallet peut gérer plusieurs comptes. Créer un compte classique dans le wallet ne signifie pas l’enregistrer immédiatement sur la blockchain.","source":"https://ethereum.org/fr/developers/docs/accounts/"},
+      {"mot":"Clé publique","definition":"Donnée cryptographique liée à une clé privée, qui permet de vérifier les signatures produites avec celle-ci.","seance":"3","prioritaire":false,"attention":"Elle n’est pas secrète. Elle est distincte de l’adresse utilisée pour recevoir des actifs.","source":"https://ethereum.org/fr/developers/docs/accounts/"},
+      {"mot":"Mot de passe du wallet","definition":"Mot de passe utilisé par une application pour protéger l’accès local au wallet ou à certaines fonctions.","seance":"3","prioritaire":true,"attention":"Il ne remplace pas une clé privée ou une phrase de récupération. Son rôle et la récupération dépendent du mode de création du wallet.","source":"https://support.metamask.io/start/creating-a-new-wallet"},
+      {"mot":"MetaMask","definition":"Application de wallet utilisée dans l’atelier pour gérer un compte et effectuer un transfert sur Sepolia.","seance":"3","prioritaire":false,"attention":"Vérifier le réseau sélectionné et les détails avant de signer. Les options de création et de récupération varient selon le mode choisi.","source":"https://support.metamask.io/start/creating-a-new-wallet"},
+      {"mot":"Sepolia","definition":"Réseau de test Ethereum utilisé pour l’exercice de la séance 3.","seance":"3","prioritaire":true,"attention":"Ses soldes et son historique sont distincts de ceux du réseau principal Ethereum.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"ETH de test (Sepolia)","definition":"ETH utilisé sur Sepolia pour effectuer des essais et payer les frais de test.","seance":"3","prioritaire":false,"attention":"Souvent appelé SepoliaETH. Ce n’est pas l’ETH du réseau principal et il n’est pas nécessaire d’en acheter pour l’exercice.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"Faucet","definition":"Service qui distribue de petites quantités d’actifs de test, par exemple des ETH sur Sepolia.","seance":"3","prioritaire":false,"attention":"Un distributeur de test peut imposer des conditions d’accès. Ne jamais lui fournir une clé privée ou une phrase de récupération.","source":"https://ethereum.org/fr/developers/docs/networks/"},
+      {"mot":"Frais de transaction","definition":"Montant payé pour qu’une opération soit exécutée et incluse selon les règles du réseau.","seance":"3","prioritaire":true,"attention":"Sur Ethereum, ces frais se paient en ETH, même pour un transfert d’USDC ou d’EURC. Garder assez d’ETH pour les frais.","source":"https://ethereum.org/fr/developers/docs/gas/"},
+      {"mot":"En attente (pending)","definition":"État d’une transaction envoyée qui n’a pas encore été incluse dans un bloc.","seance":"3","prioritaire":false,"attention":"L’envoi ne garantit ni son inclusion ni la réussite de son exécution.","source":"https://ethereum.org/fr/developers/docs/transactions/"},
+      {"mot":"Inclusion","definition":"Ajout d’une transaction dans un bloc du réseau.","seance":"3","prioritaire":false,"attention":"Sur Ethereum, vérifier séparément le résultat de l’exécution : une transaction incluse peut avoir échoué.","source":"https://ethereum.org/fr/developers/docs/transactions/"},
+      {"mot":"Finalité","definition":"État à partir duquel un bloc est considéré comme définitif selon les règles du réseau.","seance":"3","prioritaire":false,"attention":"Les mécanismes diffèrent selon les réseaux. Sur Ethereum, inclusion, réussite de l’exécution et finalisation sont trois informations distinctes.","source":"https://ethereum.org/fr/developers/docs/consensus-mechanisms/pos/"},
+      {"mot":"Garde déléguée (custodial)","definition":"Mode de conservation dans lequel un service contrôle les clés pour le compte de l’utilisateur.","seance":"3","prioritaire":false,"attention":"L’utilisateur dépend de ce service pour accéder à ses actifs et autoriser les opérations.","source":"https://ethereum.org/fr/wallets/"},
+      {"mot":"Autogarde (non-custodial)","definition":"Mode de conservation dans lequel l’utilisateur contrôle les moyens nécessaires pour autoriser les opérations.","seance":"3","prioritaire":true,"attention":"Il est responsable de leur protection et de leur sauvegarde. Ne jamais utiliser une phrase de récupération fournie par un inconnu.","source":"https://ethereum.org/fr/wallets/"}
+    ];
+    const entree = document.getElementById("recherche");
+    const filtre = document.getElementById("filtre");
+    const lignes = document.getElementById("lignes");
+    const compteur = document.getElementById("compteur");
+    const aucun = document.getElementById("aucun");
+    const motsPublies = mots.filter(mot => mot.publie !== false && /^\d+$/.test(mot.seance) && Number(mot.seance) <= derniereSeanceVue);
+    for (const numero of [...new Set(motsPublies.map(mot => Number(mot.seance)))].sort((a,b) => a-b)) {
+      const option = document.createElement("option");
+      option.value = String(numero);
+      option.textContent = `Séance ${numero}`;
+      filtre.append(option);
+    }
+    function normaliser(texte) { return String(texte).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("fr"); }
+    function afficher() {
+      const recherche = normaliser(entree.value.trim());
+      const selection = filtre.value;
+      const resultat = motsPublies.filter(mot => (!selection || mot.seance === selection) && normaliser([mot.mot,mot.definition,mot.attention].join(" ")).includes(recherche));
+      lignes.replaceChildren();
+      for (const mot of resultat) {
+        const tr = document.createElement("tr");
+        const cellule = (titre, contenu) => {
+          const td = document.createElement("td");
+          td.dataset.label = titre;
+          if (contenu instanceof Node) td.append(contenu);
+          else td.textContent = contenu;
+          tr.append(td);
+        };
+        cellule("Mot", mot.mot);
+        const definition = document.createElement("span");
+        definition.textContent = mot.definition;
+        if (mot.attention) {
+          const nuance = document.createElement("span");
+          nuance.className = "small";
+          nuance.style.display = "block";
+          nuance.style.marginTop = "6px";
+          nuance.textContent = "À retenir : " + mot.attention;
+          definition.append(nuance);
+        }
+        cellule("Définition", definition);
+        cellule("Vu en séance", `S${mot.seance}`);
+        cellule("Prioritaire", mot.prioritaire ? "★ Oui" : "—");
+        const lien = document.createElement("a");
+        lien.href = mot.source;
+        lien.target = "_blank";
+        lien.rel = "noopener noreferrer";
+        lien.textContent = "Voir";
+        lien.setAttribute("aria-label", "Source pour " + mot.mot);
+        cellule("Source", lien);
+        lignes.append(tr);
+      }
+      compteur.textContent = `${resultat.length} mot${resultat.length > 1 ? "s" : ""}`;
+      aucun.hidden = resultat.length !== 0;
+    }
+    entree.addEventListener("input",afficher);
+    filtre.addEventListener("change",afficher);
+    afficher();
+  </script>
+</body>
+</html>
