@@ -1,1 +1,76 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Formation Web3</title></head><body style="font:18px system-ui,sans-serif;max-width:760px;margin:60px auto;padding:20px"><h1>Formation Web3 — site de test</h1><p>Ce site est indépendant de Neocities.</p><p><a href="./S01/activite.html">Séance 1 — Carte mentale du Web3</a></p></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Web3, Blockchain & IA · Espace formation</title>
+<style>
+:root{color-scheme:dark;--bg:#07121a;--panel:#112932;--border:#31515b;--muted:#b2c7ca;--mint:#51dacd;--white:#f0f7f7}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 70% 38% at 95% 0%,#143f47 0%,transparent 100%),var(--bg);color:var(--white);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:1450px;margin:0 auto;padding:70px 42px 90px}
+.eyebrow{font-size:.92rem;font-weight:800;letter-spacing:.19em;color:var(--mint)}
+h1{font-size:clamp(3rem,6.3vw,6rem);letter-spacing:-.075em;line-height:1.05;margin:24px 0 24px;font-weight:850}
+.lead{font-size:clamp(1.08rem,1.7vw,1.4rem);line-height:1.6;color:var(--muted);max-width:790px;margin:0}
+.glossary{display:inline-block;background:var(--mint);color:#061720;font-size:1.1rem;font-weight:800;padding:17px 24px;border-radius:15px;text-decoration:none;margin-top:30px}
+.glossary[aria-disabled="true"]{opacity:.62;cursor:not-allowed}
+.catalogue{margin-top:94px}.searchline{display:flex;gap:18px;align-items:center;margin-bottom:25px}
+#search{background:#10242d;border:1px solid var(--border);border-radius:16px;color:var(--white);padding:19px 21px;font:inherit;width:100%;min-width:0}
+#search::placeholder{color:var(--muted)}#count{color:var(--muted);white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:linear-gradient(155deg,#142f38,#10232c);border:1px solid var(--border);border-radius:25px;min-height:240px;padding:30px;display:flex;flex-direction:column}
+.card .num{color:var(--mint);font-weight:800;letter-spacing:.13em;font-size:.9rem}
+.card h2{font-size:1.38rem;line-height:1.28;letter-spacing:-.035em;margin:20px 0 32px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+.actions a{background:#173b45;border:1px solid var(--border);border-radius:12px;color:var(--white);text-decoration:none;padding:11px 17px;font-weight:750}
+.actions a:hover,.actions a:focus-visible{background:#25545d;outline-color:var(--mint)}
+.empty{color:var(--muted);font-size:1.1rem}
+footer{border-top:1px solid var(--border);color:var(--muted);padding:30px max(42px,calc((100vw - 1366px)/2));font-size:1rem}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:55px 26px 70px}.catalogue{margin-top:70px}}
+@media(max-width:620px){.cards{grid-template-columns:1fr}.searchline{flex-direction:column;align-items:stretch}.card{min-height:210px}h1{letter-spacing:-.05em}main{padding:42px 20px 60px}footer{padding:25px 20px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">ESPACE FORMATION · 15 SÉANCES</div>
+<h1>Web3, Blockchain &amp; IA</h1>
+<p class="lead">Retrouve les activités et les quiz de chaque séance. Choisis une séance ou recherche une notion.</p>
+<a class="glossary" href="#" aria-disabled="true" title="Glossaire à publier prochainement" onclick="return false">Consulter le glossaire →</a>
+</header>
+<section class="catalogue" aria-label="Séances publiées">
+<div class="searchline"><input id="search" type="search" placeholder="Rechercher une séance ou un thème..." aria-label="Rechercher une séance ou un thème"><span id="count" aria-live="polite"></span></div>
+<div class="cards" id="cards"></div>
+<p class="empty" id="empty" hidden>Aucune séance ne correspond à ta recherche.</p>
+</section>
+</main>
+<footer>Support de formation · Web3, Blockchain &amp; IA</footer>
+<script>
+'use strict';
+// Ajouter une entrée lorsqu'une séance est prête à être publiée.
+// Ne renseigner que les liens réellement disponibles.
+const seances=[
+ {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",activite:"./S01/activite.html"}
+];
+const cards=document.getElementById('cards'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty');
+function afficher(){
+ const q=search.value.trim().toLocaleLowerCase('fr');
+ const items=seances.filter(s=>(s.numero+' '+s.titre+' '+(s.motsCles||'')).toLocaleLowerCase('fr').includes(q));
+ cards.replaceChildren();
+ for(const s of items){
+  const card=document.createElement('article');card.className='card';
+  const num=document.createElement('div');num.className='num';num.textContent='SÉANCE '+String(s.numero).padStart(2,'0');
+  const h=document.createElement('h2');h.textContent=s.titre;
+  const actions=document.createElement('div');actions.className='actions';
+  for(const [label,url] of [['Activité',s.activite],['Quiz',s.quiz]]){
+   if(!url)continue;
+   const a=document.createElement('a');a.textContent=label;a.href=url;actions.append(a);
+  }
+  card.append(num,h,actions);cards.append(card);
+ }
+ count.textContent=items.length+' séance'+(items.length>1?'s':'');
+ empty.hidden=items.length!==0;
+}
+search.addEventListener('input',afficher);afficher();
+</script>
+</body>
+</html>
