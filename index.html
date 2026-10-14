@@ -49,7 +49,9 @@ footer{border-top:1px solid var(--border);color:var(--muted);padding:30px max(42
 // Ajouter une entrée lorsqu'une séance est prête à être publiée.
 // Ne renseigner que les liens réellement disponibles.
 const seances=[
- {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",activite:"./S01/activite.html"}
+ {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",activite:"./S01/activite.html"},
+ {numero:2,titre:"Les bases de la blockchain",motsCles:"hachage merkle bloc preuve de travail consensus",activite:"./S02/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSfF1bJEAE46Lm5PotsM9I6CKbbMfdfI-btSn9qQHBz_KpsY8g/viewform"},
+ {numero:3,titre:"Cryptomonnaies et portefeuilles",motsCles:"metamask sepolia wallet clé privée cryptomonnaie",activite:"./S03/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdX6zUTWmrc2lIloecpLTQ6lHledZmWLa7L5yHuo560DiuYHQ/viewform"}
 ];
 const cards=document.getElementById('cards'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty');
 function afficher(){
