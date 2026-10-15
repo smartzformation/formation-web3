@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact · Web3, Blockchain & IA</title>
+<style>
+:root{color-scheme:dark;--bg:#07121a;--panel:#112932;--border:#31515b;--muted:#b2c7ca;--mint:#51dacd;--white:#f0f7f7}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+main{max-width:720px;margin:auto;padding:55px 22px 90px}a{color:var(--mint)}h1{font-size:clamp(2.3rem,6vw,3.7rem);line-height:1.1;margin:35px 0 18px}p{color:var(--muted)}
+form{background:var(--panel);border:1px solid var(--border);padding:30px;border-radius:22px;margin-top:30px}
+label{display:block;font-weight:700;margin:17px 0 7px}input,textarea{display:block;width:100%;padding:13px 15px;border-radius:10px;background:#071c25;border:1px solid #49616b;color:var(--white);font:inherit}textarea{min-height:145px;resize:vertical}
+button{margin-top:23px;padding:14px 24px;border:0;border-radius:12px;background:var(--mint);color:#061720;font:inherit;font-weight:800;cursor:pointer}
+.note{font-size:.9rem}.hidden{display:none}
+</style></head>
+<body><main><a href="./index.html">← Retour aux séances</a><h1>Nous contacter</h1>
+<p>Une question sur la formation Web3, Blockchain & IA, une remarque ou une proposition ? Laisse un message via ce formulaire.</p>
+<form name="contact-formation" method="POST" action="/merci.html" data-netlify="true" netlify-honeypot="bot-field">
+<input type="hidden" name="form-name" value="contact-formation">
+<p class="hidden"><label>Ne pas remplir : <input name="bot-field"></label></p>
+<label for="nom">Nom</label><input id="nom" name="nom" autocomplete="name" required maxlength="120">
+<label for="email">Adresse e-mail</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="254">
+<label for="message">Message</label><textarea id="message" name="message" required maxlength="5000"></textarea>
+<button type="submit">Envoyer le message</button>
+<p class="note">Les informations saisies servent uniquement à traiter ton message. N'envoie aucune phrase de récupération, clé privée ou donnée sensible.</p>
+</form></main></body></html>
