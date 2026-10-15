@@ -20,7 +20,7 @@ h1{font-size:clamp(3rem,6.3vw,6rem);letter-spacing:-.075em;line-height:1.05;marg
 .card{background:linear-gradient(155deg,#142f38,#10232c);border:1px solid var(--border);border-radius:25px;min-height:240px;padding:30px;display:flex;flex-direction:column}
 .card .thumb{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:15px;margin-bottom:22px;border:1px solid var(--border)}
 .card .num{color:var(--mint);font-weight:800;letter-spacing:.13em;font-size:.9rem}
-.card h2{font-size:1.38rem;line-height:1.28;letter-spacing:-.035em;margin:20px 0 32px}
+.card h2{font-size:1.38rem;line-height:1.28;letter-spacing:-.035em;margin:14px 0 12px}.card .description{color:var(--muted);line-height:1.55;margin:0 0 28px;font-size:1rem}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
 .actions a{background:#173b45;border:1px solid var(--border);border-radius:12px;color:var(--white);text-decoration:none;padding:11px 17px;font-weight:750}
 .actions a:hover,.actions a:focus-visible{background:#25545d;outline-color:var(--mint)}
@@ -50,9 +50,9 @@ footer a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}f
 // Ajouter une entrée lorsqu'une séance est prête à être publiée.
 // Ne renseigner que les liens réellement disponibles.
 const seances=[
- {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",activite:"./S01/activite.html"},
- {numero:2,titre:"Les bases de la blockchain",motsCles:"hachage merkle bloc preuve de travail consensus",activite:"./S02/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSfF1bJEAE46Lm5PotsM9I6CKbbMfdfI-btSn9qQHBz_KpsY8g/viewform"},
- {numero:3,titre:"Cryptomonnaies et portefeuilles",motsCles:"metamask sepolia wallet clé privée cryptomonnaie",activite:"./S03/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdX6zUTWmrc2lIloecpLTQ6lHledZmWLa7L5yHuo560DiuYHQ/viewform"}
+ {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",description:"Comprendre l’évolution du Web1 au Web3, les usages numériques et les premières notions d’intelligence artificielle.",activite:"./S01/activite.html"},
+ {numero:2,titre:"Les bases de la blockchain",motsCles:"hachage merkle bloc preuve de travail consensus",description:"Découvrir les transactions, le hachage, l’arbre de Merkle et la preuve de travail à travers une activité pratique.",activite:"./S02/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSfF1bJEAE46Lm5PotsM9I6CKbbMfdfI-btSn9qQHBz_KpsY8g/viewform"},
+ {numero:3,titre:"Cryptomonnaies et portefeuilles",motsCles:"metamask sepolia wallet clé privée cryptomonnaie",description:"Comprendre les cryptomonnaies, créer un portefeuille MetaMask et expérimenter les transactions sur Sepolia.",activite:"./S03/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdX6zUTWmrc2lIloecpLTQ6lHledZmWLa7L5yHuo560DiuYHQ/viewform"}
 ];
 const cards=document.getElementById('cards'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty');
 function afficher(){
@@ -64,12 +64,13 @@ function afficher(){
   const thumb=document.createElement('img');thumb.className='thumb';thumb.src='./images/seance-'+String(s.numero).padStart(2,'0')+'.svg';thumb.alt='Illustration de la séance '+s.numero;thumb.loading='lazy';
   const num=document.createElement('div');num.className='num';num.textContent='SÉANCE '+String(s.numero).padStart(2,'0');
   const h=document.createElement('h2');h.textContent=s.titre;
+  const desc=document.createElement('p');desc.className='description';desc.textContent=s.description||'';
   const actions=document.createElement('div');actions.className='actions';
   for(const [label,url] of [['Activité',s.activite],['Quiz',s.quiz]]){
    if(!url)continue;
    const a=document.createElement('a');a.textContent=label;a.href=url;actions.append(a);
   }
-  card.append(thumb,num,h,actions);cards.append(card);
+  card.append(thumb,num,h,desc,actions);cards.append(card);
  }
  count.textContent=items.length+' séance'+(items.length>1?'s':'');
  empty.hidden=items.length!==0;
