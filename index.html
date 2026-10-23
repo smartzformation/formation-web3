@@ -24,6 +24,7 @@ h1{font-size:clamp(3rem,6.3vw,6rem);letter-spacing:-.075em;line-height:1.05;marg
 .card h2{font-size:1.38rem;line-height:1.28;letter-spacing:-.035em;margin:14px 0 12px}.card .description{color:var(--muted);line-height:1.55;margin:0 0 28px;font-size:1rem}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
 .actions a{background:#173b45;border:1px solid var(--border);border-radius:12px;color:var(--white);text-decoration:none;padding:11px 17px;font-weight:750}
+.actions button:disabled{background:#173b45;border:1px solid var(--border);border-radius:12px;color:var(--muted);padding:11px 17px;font:inherit;font-weight:750;opacity:.65;cursor:not-allowed}
 .actions a:hover,.actions a:focus-visible{background:#25545d;outline-color:var(--mint)}
 .empty{color:var(--muted);font-size:1.1rem}
 footer a{color:var(--mint);text-decoration:underline;text-underline-offset:3px}footer{border-top:1px solid var(--border);color:var(--muted);padding:30px max(42px,calc((100vw - 1366px)/2));font-size:1rem}
@@ -56,7 +57,7 @@ const seances=[
  {numero:1,titre:"Découvrir Internet et le Web3",motsCles:"internet web1 web2 web3 carte mentale",description:"Comprendre l’évolution du Web1 au Web3, les usages numériques et les premières notions d’intelligence artificielle.",activite:"./S01/activite.html"},
  {numero:2,titre:"Les bases de la blockchain",motsCles:"hachage merkle bloc preuve de travail consensus",description:"Découvrir les transactions, le hachage, l’arbre de Merkle et la preuve de travail à travers une activité pratique.",activite:"./S02/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSfF1bJEAE46Lm5PotsM9I6CKbbMfdfI-btSn9qQHBz_KpsY8g/viewform"},
  {numero:3,titre:"Cryptomonnaies et portefeuilles",motsCles:"metamask sepolia wallet clé privée cryptomonnaie plateformes crypto meria deskoin bitstack bybit kraken swissborg coinbase",description:"Comprendre les cryptomonnaies, créer un portefeuille MetaMask et expérimenter les transactions sur Sepolia.",activite:"./S03/activite.html",plateformes:"./plateformes-crypto.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdX6zUTWmrc2lIloecpLTQ6lHledZmWLa7L5yHuo560DiuYHQ/viewform"} ,
- {numero:4,titre:"DeFi : premier swap avec SMZF",motsCles:"defi nft smzf smzform uniswap swap échange jeton importation metamask sepolia",description:"Importer le jeton SMZF dans MetaMask, puis réaliser un premier swap sur Uniswap avec des actifs de test sur Sepolia.",activite:"./S04/activite.html"}
+ {numero:4,titre:"Des tokens fongibles aux NFT",motsCles:"defi nft smzf smzform uniswap swap échange jeton importation metamask sepolia",description:"Échanger des tokens fongibles sur Uniswap et découvrir les NFT : des tokens individuellement identifiables, comme des cartes numériques numérotées.",activite:"./S04/activite.html",quizAVenir:true,alt:"Trois jetons SMZF identiques, puis une carte numérique illustrée portant le numéro 016"}
 ];
 const cards=document.getElementById('cards'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty');
 function afficher(){
@@ -65,7 +66,7 @@ function afficher(){
  cards.replaceChildren();
  for(const s of items){
   const card=document.createElement('article');card.className='card';
-  const thumb=document.createElement('img');thumb.className='thumb';thumb.src='./images/seance-'+String(s.numero).padStart(2,'0')+'.svg';thumb.alt='Illustration de la séance '+s.numero;thumb.loading='lazy';
+  const thumb=document.createElement('img');thumb.className='thumb';thumb.src='./images/seance-'+String(s.numero).padStart(2,'0')+'.svg';thumb.alt=s.alt||('Illustration de la séance '+s.numero);thumb.loading='lazy';
   const num=document.createElement('div');num.className='num';num.textContent='SÉANCE '+String(s.numero).padStart(2,'0');
   const h=document.createElement('h2');h.textContent=s.titre;
   const desc=document.createElement('p');desc.className='description';desc.textContent=s.description||'';
@@ -74,6 +75,7 @@ function afficher(){
    if(!url)continue;
    const a=document.createElement('a');a.textContent=label;a.href=url;actions.append(a);
   }
+  if(s.quizAVenir&&!s.quiz){const b=document.createElement('button');b.type='button';b.disabled=true;b.textContent='Quiz · à venir';b.title='Le quiz sera accessible après sa publication';actions.append(b);}
   card.append(thumb,num,h,desc,actions);cards.append(card);
  }
  count.textContent=items.length+' séance'+(items.length>1?'s':'');
