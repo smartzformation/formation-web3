@@ -34,12 +34,12 @@
   <header class="wrap">
     <a class="back" href="./index.html">← Retour aux séances</a>
     <h1>Glossaire</h1>
-    <p class="intro">Les mots clés déjà abordés dans la formation. ★ indique une notion prioritaire. Le glossaire évoluera au fil du cours.</p>
+    <p class="intro">Les mots clés abordés dans la formation et des compléments pour aller plus loin. ★ indique une notion prioritaire. Le glossaire évoluera au fil du cours.</p>
   </header>
   <main class="wrap">
     <div class="controls">
       <input id="recherche" type="search" placeholder="Rechercher un mot, une définition…" aria-label="Rechercher dans le glossaire" autocomplete="off">
-      <select id="filtre" aria-label="Filtrer par séance"><option value="">Toutes les séances publiées</option></select>
+      <select id="filtre" aria-label="Filtrer par séance"><option value="">Toutes les notions publiées</option></select>
     </div>
     <p class="count" id="compteur" aria-live="polite"></p>
     <div class="table-scroll">
@@ -62,6 +62,7 @@
     // Pour cacher une notion isolée, ajouter publie:false dans sa ligne.
     // Pour la rendre visible, retirer publie:false (ou le remplacer par true).
     const mots = [
+      {"mot":"Oracle","definition":"Passerelle qui permet à un smart contract (programme sur une blockchain) d’utiliser des données extérieures à sa blockchain, comme le retard d’un avion ou un prix.","seance":"complement","prioritaire":false,"attention":"Un oracle peut utiliser une API pour récupérer des données, puis les rendre disponibles au smart contract. Il ne garantit pas automatiquement leur exactitude : sa fiabilité dépend des sources et des vérifications utilisées.","source":"https://ethereum.org/fr/developers/docs/oracles/"},
       {"mot":"Web 1.0","definition":"Période du Web où les sites servaient surtout à consulter des pages.","seance":"1","prioritaire":true,"attention":"Une période historique, pas une version officielle d’Internet.","source":"https://ethereum.org/fr/glossary/"},
       {"mot":"Web 2.0","definition":"Web où les utilisateurs publient, échangent et interagissent sur des plateformes.","seance":"1","prioritaire":true,"attention":"Comptes et contenus dépendent souvent des plateformes.","source":"https://ethereum.org/fr/glossary/"},
       {"mot":"Web3","definition":"Ensemble de services utilisant notamment les blockchains pour permettre des échanges et des actions vérifiables.","seance":"1","prioritaire":true,"attention":"La blockchain ne garantit pas à elle seule une décentralisation totale.","source":"https://ethereum.org/fr/glossary/"},
@@ -147,11 +148,17 @@
     const lignes = document.getElementById("lignes");
     const compteur = document.getElementById("compteur");
     const aucun = document.getElementById("aucun");
-    const motsPublies = mots.filter(mot => mot.publie !== false && /^\d+$/.test(mot.seance) && Number(mot.seance) <= derniereSeanceVue);
-    for (const numero of [...new Set(motsPublies.map(mot => Number(mot.seance)))].sort((a,b) => a-b)) {
+    const motsPublies = mots.filter(mot => mot.publie !== false && (mot.seance === "complement" || (/^\d+$/.test(mot.seance) && Number(mot.seance) <= derniereSeanceVue)));
+    for (const numero of [...new Set(motsPublies.filter(mot => /^\d+$/.test(mot.seance)).map(mot => Number(mot.seance)))].sort((a,b) => a-b)) {
       const option = document.createElement("option");
       option.value = String(numero);
       option.textContent = `Séance ${numero}`;
+      filtre.append(option);
+    }
+    if (motsPublies.some(mot => mot.seance === "complement")) {
+      const option = document.createElement("option");
+      option.value = "complement";
+      option.textContent = "Compléments";
       filtre.append(option);
     }
     function normaliser(texte) { return String(texte).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase("fr"); }
@@ -181,7 +188,7 @@
           definition.append(nuance);
         }
         cellule("Définition", definition);
-        cellule("Vu en séance", `S${mot.seance}`);
+        cellule("Vu en séance", mot.seance === "complement" ? "Complément" : `S${mot.seance}`);
         cellule("Prioritaire", mot.prioritaire ? "★ Oui" : "—");
         const lien = document.createElement("a");
         lien.href = mot.source;
