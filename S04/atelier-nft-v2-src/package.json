@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "ethers": "6.15.0",
+    "ganache": "7.9.2",
+    "solc": "0.8.30"
+  },
+  "name": "familles-web3-atelier",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "compile": "node compile.cjs && node flatten.cjs",
+    "test": "node compile.cjs && node test/run.cjs"
+  }
+}

@@ -1,0 +1,362 @@
+[
+  {
+    "name": "Le Boxeur - Carte 01 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/boxeur-01.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Boxe"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "01"
+      }
+    ]
+  },
+  {
+    "name": "La Boxeuse - Carte 02 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/boxeuse-02.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Boxe"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "02"
+      }
+    ]
+  },
+  {
+    "name": "L’Entraîneur - Carte 03 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/entraineur-03.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Boxe"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "03"
+      }
+    ]
+  },
+  {
+    "name": "L’Arbitre - Carte 04 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/arbitre-04.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Boxe"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "04"
+      }
+    ]
+  },
+  {
+    "name": "Le Guitariste - Carte 05 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/guitariste-05.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Musique"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "05"
+      }
+    ]
+  },
+  {
+    "name": "La Chanteuse - Carte 06 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/chanteuse-06.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Musique"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "06"
+      }
+    ]
+  },
+  {
+    "name": "Le Batteur - Carte 07 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/batteur-07.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Musique"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "07"
+      }
+    ]
+  },
+  {
+    "name": "La Pianiste - Carte 08 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/pianiste-08.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Musique"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "08"
+      }
+    ]
+  },
+  {
+    "name": "Le Comédien - Carte 09 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/comedien-09.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Théâtre"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "09"
+      }
+    ]
+  },
+  {
+    "name": "La Comédienne - Carte 10 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/comedienne-10.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Théâtre"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "10"
+      }
+    ]
+  },
+  {
+    "name": "La Metteuse en scène - Carte 11 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/metteuse-en-scene-11.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Théâtre"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "11"
+      }
+    ]
+  },
+  {
+    "name": "Le Régisseur - Carte 12 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/regisseur-12.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Théâtre"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "12"
+      }
+    ]
+  },
+  {
+    "name": "La Chercheuse - Carte 13 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/chercheuse-13.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Sciences"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "13"
+      }
+    ]
+  },
+  {
+    "name": "L’Astronaute - Carte 14 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/astronaute-14.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Sciences"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "14"
+      }
+    ]
+  },
+  {
+    "name": "Le Roboticien - Carte 15 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/roboticien-15.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Sciences"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "15"
+      }
+    ]
+  },
+  {
+    "name": "La Biologiste - Carte 16 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/biologiste-16.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Sciences"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "16"
+      }
+    ]
+  },
+  {
+    "name": "Le Chef - Carte 17 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/chef-17.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Cuisine"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "17"
+      }
+    ]
+  },
+  {
+    "name": "La Pâtissière - Carte 18 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/patissiere-18.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Cuisine"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "18"
+      }
+    ]
+  },
+  {
+    "name": "Le Boulanger - Carte 19 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/boulanger-19.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Cuisine"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "19"
+      }
+    ]
+  },
+  {
+    "name": "La Chocolatière - Carte 20 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/chocolatiere-20.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Cuisine"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "20"
+      }
+    ]
+  },
+  {
+    "name": "L’Aventurière - Carte 21 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/aventuriere-21.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Exploration"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "21"
+      }
+    ]
+  },
+  {
+    "name": "Le Plongeur - Carte 22 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/plongeur-22.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Exploration"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "22"
+      }
+    ]
+  },
+  {
+    "name": "L’Alpiniste - Carte 23 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/alpiniste-23.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Exploration"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "23"
+      }
+    ]
+  },
+  {
+    "name": "La Navigatrice - Carte 24 - Atelier",
+    "description": "Collection pédagogique sur Sepolia. Le formateur peut reprendre cette carte sans contrepartie. Les jokers sont déterminés par le contrat et affichés dans la galerie.",
+    "image": "https://smartz-formation.neocities.org/NFT/navigatrice-24.png",
+    "attributes": [
+      {
+        "trait_type": "Famille",
+        "value": "Exploration"
+      },
+      {
+        "trait_type": "Carte",
+        "value": "24"
+      }
+    ]
+  }
+]

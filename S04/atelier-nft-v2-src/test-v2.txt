@@ -1,0 +1,65 @@
+This version of µWS is not compatible with your Node.js build:
+
+Error: Cannot find module '../binaries/uws_linux_x64_137.node'
+Require stack:
+- /workspace/scratch/b0762e0f35ee/nft-atelier/node_modules/ganache/node_modules/@trufflesuite/uws-js-unofficial/src/uws.js
+- /workspace/scratch/b0762e0f35ee/nft-atelier/node_modules/ganache/dist/node/core.js
+- /workspace/scratch/b0762e0f35ee/nft-atelier/test/run.cjs
+Falling back to a NodeJS implementation; performance may be degraded.
+
+
+OK 24 cartes creees
+OK refus preparation par apprenant
+OK refus doublon participant
+OK refus plus de 24 participants
+OK refus formateur participant
+OK refus injection aleatoire
+OK refus second tirage
+OK refus distribution avant oracle
+OK distribution 24 participants
+OK refus second tirage
+OK refus distribution avant oracle
+OK distribution 12 participants
+OK refus second tirage
+OK refus distribution avant oracle
+OK distribution 10 participants
+OK refus second tirage
+OK refus distribution avant oracle
+OK distribution 9 participants
+OK refus second tirage
+OK refus distribution avant oracle
+OK distribution 2 participants
+OK refus transfert direct ordinaire
+OK refus contournement via approval
+OK refus safeTransfer direct
+OK refus don carte ordinaire
+OK refus don du joker vers autre joker
+OK refus don vers exterieur
+OK refus solde/autorisation insuffisant
+OK refus prix modifie
+OK achat NFT et paiement exact
+OK refus achat du deuxieme joker
+OK refus acceptation sans consentement destinataire
+OK troc atomique des jokers
+OK don joker
+OK refus vente en pause
+OK refus scrutin simultane
+OK refus joker candidat
+OK refus carte formateur candidate
+OK refus vote premature
+OK poids figes malgre don joker
+OK refus double vote
+OK refus finalisation par apprenant
+OK refus finalisation par adresse exterieure
+OK resultat DAO applique
+OK refus reprise par apprenant
+OK reprise sans contrepartie meme en pause
+OK nouveau semestre sans anciens droits
+OK refus liaison modifiable
+OK refus callback oracle falsifie
+OK cycle complet adaptateur VRF
+OK absence de quorum maintient les jokers
+OK egalite maintient les jokers
+OK paire devenue commune au meme portefeuille rejetee
+OK cloture invalide les anciennes offres
+SUCCES : 54 controles; execution EVM locale, pas de transaction Sepolia.
