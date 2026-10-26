@@ -1,0 +1,1706 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atelier NFT · Les Familles du Web3</title><link rel="icon" type="image/svg+xml" href="../images/smartz-icon.svg"><style>:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#09131c;color:#effaf8;font:16px/1.6 system-ui}main{max-width:1200px;margin:auto;padding:30px 20px}h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.1}section,article{background:#142831;border:1px solid #34525a;padding:20px;border-radius:16px;margin:18px 0}input,textarea,select,button{font:inherit;border-radius:9px;padding:10px;margin:5px 0;max-width:100%}input,textarea,select{background:#09131c;color:white;border:1px solid #78969b}input,textarea{width:100%}button{background:#57e0cb;color:#09131c;border:0;cursor:pointer}button:disabled{opacity:.5;cursor:wait}label{display:block;margin-top:10px}a{color:#57e0cb}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}article{margin:0;position:relative}article img{width:100%;aspect-ratio:3/4;object-fit:contain}.badge{position:absolute;top:25px;left:25px;background:#ffe081;color:#17242a;font-weight:900;padding:6px 12px;border-radius:30px}.address{word-break:break-all;font-family:monospace;font-size:.8rem}.muted{color:#c0d6d4}#status{white-space:pre-wrap;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid white;outline-offset:3px}[hidden]{display:none!important}</style><script src="./ethers.umd.min.js"></script></head><body><main><a href="./activite.html">← Activités de la séance 4</a> · <a href="./galerie-nft.html">Ancienne collection</a><p>SMARTZ FORMATION · SEPOLIA</p><h1>Les Familles du Web3</h1><p>Atelier de vente, d’échange et de gouvernance. Les cartes sont récupérables par le formateur sans contrepartie. Les SMZF restent dans les portefeuilles. Aucun argent réel nécessaire.</p>
+<section><h2>Nouvelle collection · Atelier</h2><label>Adresse du nouveau contrat AtelierNFT<input id="contract" placeholder="0x…"></label><button id="load">Consulter</button> <button id="connect">Connecter MetaMask sur Sepolia</button><p id="account" class="address"></p><p id="summary"></p><p id="status" role="status" aria-live="polite">Chargement de la collection Atelier sur Sepolia…</p></section>
+<section><h2>Mes cartes et le marché</h2><label><input type="checkbox" id="mine" style="width:auto"> Afficher uniquement mes cartes</label><p>Prix en SMZF. Les jokers peuvent être donnés, vendus ou échangés uniquement avec l’autre joker. Deux jokers dans un portefeuille apprenant sont interdits.</p><div id="cards" class="grid"></div></section>
+<section><h2>Échanger les deux jokers</h2><label>Carte proposée<input id="give" type="number" min="1" max="24"></label><label>Carte reçue<input id="take" type="number" min="1" max="24"></label><button id="proposeSwap">Proposer pour une heure</button><label>Numéro de proposition d’échange<input id="swapId" type="number" min="1"></label><button id="checkSwap">Voir la proposition</button> <button id="acceptSwap">Accepter l’échange</button> <button id="cancelSwap">Annuler ma proposition</button><p id="swapInfo"></p></section>
+<section><h2>DAO · Choisir la prochaine paire</h2><p id="ballotInfo"></p><label>Première carte candidate<input id="pairX" type="number" min="1" max="24"></label><label>Seconde carte candidate<input id="pairY" type="number" min="1" max="24"></label><button id="proposePair">Proposer cette paire</button><div id="candidates"></div><button id="finalize">Appliquer le résultat après clôture</button><p>Les jokers actuels et les cartes du formateur sont exclus des candidatures. Une égalité, une participation insuffisante ou une paire devenue inadmissible maintiennent la paire actuelle.</p></section>
+<section id="trainer" hidden><h2>Espace formateur</h2><p>La distribution requiert un abonnement Chainlink VRF alimenté en LINK de test. Étapes : préparer → demander le tirage → attendre l’oracle → distribuer.</p><label>Adresses des apprenants (une par ligne, 2 à 24)<textarea id="learners" rows="6"></textarea></label><label>Joker initial X<input id="jokerX" type="number" value="1" min="1" max="24"></label><label>Joker initial Y<input id="jokerY" type="number" value="2" min="1" max="24"></label><button id="prepare">Préparer la session</button> <button id="request">Demander le tirage VRF</button> <button id="distribute">Distribuer après réponse</button><label>Dotation en SMZF par apprenant<input id="grant" value="1000" inputmode="decimal"></label><button id="fund">Distribuer les SMZF (une confirmation par apprenant)</button><p>La distribution des SMZF utilise leur contrat existant ; elle nécessite une transaction par destinataire. Vérifie les soldes avant de recommencer après une interruption.</p><button id="pause">Mettre en pause</button> <button id="resume">Reprendre</button> <button id="recover">Clôturer et récupérer les 24 cartes</button><label>Durée des propositions (minutes)<input id="proposalMinutes" type="number" min="1" value="5"></label><label>Durée du vote (minutes)<input id="voteMinutes" type="number" min="1" value="5"></label><label>Participation minimale en % du poids total<input id="quorum" type="number" min="1" max="100" value="50"></label><button id="startVote">Ouvrir le scrutin</button></section>
+</main><script>
+'use strict';
+const ABI=[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "randomProvider",
+        "type": "address"
+      },
+      {
+        "internalType": "string[]",
+        "name": "uris",
+        "type": "string[]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721IncorrectOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC721InsufficientApproval",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "approver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidApprover",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidOperator",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "ERC721InvalidSender",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC721NonexistentToken",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "approved",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "ApprovalForAll",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "ballot",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "applied",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      }
+    ],
+    "name": "BallotEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "ballot",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "proposalEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "voteEnd",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalWeight",
+        "type": "uint256"
+      }
+    ],
+    "name": "BallotStarted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_fromTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_toTokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "BatchMetadataUpdate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "buyer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "Bought",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "session",
+        "type": "uint256"
+      }
+    ],
+    "name": "Closed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "session",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "perParticipant",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "retained",
+        "type": "uint256"
+      }
+    ],
+    "name": "Distributed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "DrawRequested",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "Listed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "MetadataUpdate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "paused",
+        "type": "bool"
+      }
+    ],
+    "name": "PauseChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "ballot",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      }
+    ],
+    "name": "Proposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "RandomnessReady",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "session",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "count",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      }
+    ],
+    "name": "SessionPrepared",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "SwapDone",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "proposer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "give",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "take",
+        "type": "uint256"
+      }
+    ],
+    "name": "SwapProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "ballot",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "weight",
+        "type": "uint256"
+      }
+    ],
+    "name": "Voted",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MIN_PRICE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TOTAL",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "acceptSwap",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ballot",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ballotOpen",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "expectedSeller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expectedPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "buy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelListing",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelSwap",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "candidateCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "candidates",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "score",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "castWeight",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "closeAndRecover",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "distribute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "enrolled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "finalizeBallot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getApproved",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "giveJoker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "isApprovedForAll",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "isJoker",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "jokerX",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "jokerY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "lastVoted",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "list",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "listingValid",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "listings",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "rev",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "marketEpoch",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextSwap",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ownerOf",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "participantCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "participants",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "phase",
+    "outputs": [
+      {
+        "internalType": "enum AtelierNFT.Phase",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
+        "name": "learners",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      }
+    ],
+    "name": "prepare",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "proposalEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "x",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "y",
+        "type": "uint256"
+      }
+    ],
+    "name": "proposePair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "give",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "take",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      }
+    ],
+    "name": "proposeSwap",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "quorumBps",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "randomness",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "word",
+        "type": "uint256"
+      }
+    ],
+    "name": "receiveRandomness",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestDraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "revision",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seed",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "session",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "value",
+        "type": "bool"
+      }
+    ],
+    "name": "setPaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "smzf",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalSeconds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "voteSeconds",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "participationBps",
+        "type": "uint256"
+      }
+    ],
+    "name": "startBallot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      }
+    ],
+    "name": "swapValid",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "swaps",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "proposer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "give",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "take",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "epoch",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "giveRev",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "takeRev",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "deadline",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalWeight",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "trainer",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "vote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "voteEnd",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "weight",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+const $=id=>document.getElementById(id), phases=['Clôturée','Préparée','Tirage demandé','Tirage reçu','Ouverte'];let nft,read,signer,account='',trainer='',token,records=[],busy=false;
+const tokenABI=['function approve(address,uint256) returns(bool)','function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)','function decimals() view returns(uint8)'];
+function status(t){$('status').textContent=t}function same(a,b){return a?.toLowerCase()===b?.toLowerCase()}
+function n(id){const x=Number($(id).value);if(!Number.isInteger(x)||x<1)throw Error('Nombre entier positif requis');return x}
+function amount(s){return ethers.parseUnits(s.trim().replace(',','.'),18)}
+async function task(fn){if(busy)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn()}catch(e){status(e.shortMessage||e.reason||e.message)}finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false)}}
+async function send(fn){if(!signer||!nft)throw Error('Charge la collection et connecte MetaMask');status('Vérifie puis confirme la transaction dans MetaMask…');const tx=await fn(nft.connect(signer));status('Transaction envoyée : '+tx.hash);await tx.wait();await load();status('Transaction confirmée : '+tx.hash)}
+function metadata(uri){if(!uri.startsWith('data:application/json;base64,'))throw Error('Métadonnées non prises en charge');return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(uri.split(',')[1]),c=>c.charCodeAt(0))))}
+function draw(){const root=$('cards');root.replaceChildren();for(const r of records){if($('mine').checked&&!same(r.owner,account))continue;const el=document.createElement('article'),img=document.createElement('img');try{const u=new URL(r.meta.image);if(u.protocol==='https:')img.src=u.href}catch{}img.alt=r.meta.name;img.loading='lazy';el.append(img);if(r.joker){const b=document.createElement('span');b.className='badge';b.textContent='★ JOKER';el.append(b)}const h=document.createElement('h3');h.textContent='#'+r.id+' · '+r.meta.name;const p=document.createElement('p');p.className='address';p.textContent='Propriétaire : '+r.owner;el.append(h,p);if(r.valid){const price=document.createElement('p');price.textContent='À vendre : '+ethers.formatUnits(r.listing.price,18)+' SMZF';el.append(price);if(!same(account,r.owner))addButton(el,'Acheter',()=>task(async()=>{if(!signer)throw Error('Connecte MetaMask');const t=new ethers.Contract(token,tokenABI,signer);status('Autorise exactement le prix en SMZF dans MetaMask…');await (await t.approve(await nft.getAddress(),r.listing.price)).wait();await send(c=>c.buy(r.id,r.listing.seller,r.listing.price))}))}if(same(account,r.owner)&&!same(account,trainer)){const priceInput=document.createElement('input');priceInput.placeholder='Prix en SMZF';priceInput.setAttribute('aria-label','Prix carte '+r.id);el.append(priceInput);addButton(el,'Mettre en vente',()=>task(()=>send(c=>c.list(r.id,amount(priceInput.value)))));addButton(el,'Retirer de la vente',()=>task(()=>send(c=>c.cancelListing(r.id))));if(r.joker){const to=document.createElement('input');to.placeholder='Adresse du destinataire';to.setAttribute('aria-label','Destinataire carte '+r.id);el.append(to);addButton(el,'Donner',()=>task(()=>send(c=>c.giveJoker(r.id,ethers.getAddress(to.value.trim())))))}}root.append(el)}}
+function addButton(parent,label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=fn;parent.append(b)}
+async function load(){const address=ethers.getAddress($('contract').value.trim());status('Connexion à Sepolia…');read=new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com',11155111);if((await read.getNetwork()).chainId!==11155111n)throw Error('Mauvais réseau');nft=new ethers.Contract(address,ABI,read);trainer=await nft.trainer();token=await nft.smzf();const [phase,paused,x,y,count,session]=await Promise.all([nft.phase(),nft.paused(),nft.jokerX(),nft.jokerY(),nft.participantCount(),nft.session()]);$('summary').textContent='Session '+session+' · '+phases[Number(phase)]+(paused?' · EN PAUSE':'')+' · '+count+' apprenants · jokers '+x+' et '+y;$('trainer').hidden=!same(account,trainer);localStorage.setItem('atelier-nft-contract',address);records=[];status('Lecture des 24 cartes…');for(let id=1;id<=24;id++){const [owner,uri,l,valid]=await Promise.all([nft.ownerOf(id),nft.tokenURI(id),nft.listings(id),nft.listingValid(id)]);records.push({id,owner,meta:metadata(uri),listing:l,valid,joker:BigInt(id)===x||BigInt(id)===y})}draw();await ballotView();status('Données actualisées. Les signatures et transactions restent à confirmer dans MetaMask.')}
+async function ballotView(){const [open,id,endProposal,endVote,total,cast]=await Promise.all([nft.ballotOpen(),nft.ballot(),nft.proposalEnd(),nft.voteEnd(),nft.totalWeight(),nft.castWeight()]);const w=account?await nft.weight(account):0n;$('ballotInfo').textContent='Scrutin '+id+(open?' ouvert':' fermé')+' · propositions jusqu’au '+new Date(Number(endProposal)*1000).toLocaleString('fr-FR')+' · vote jusqu’au '+new Date(Number(endVote)*1000).toLocaleString('fr-FR')+' · poids exprimé '+cast+'/'+total+' · ton poids au dernier instantané : '+w;const root=$('candidates');root.replaceChildren();const count=Number(await nft.candidateCount());for(let i=0;i<count;i++){const pair=await nft.candidates(i);const p=document.createElement('p');p.textContent='Paire '+pair.x+' + '+pair.y+' : '+pair.score+' voix ';addButton(p,'Voter',()=>task(()=>send(c=>c.vote(i))));root.append(p)}}
+$('load').onclick=()=>task(load);$('mine').onchange=draw;
+$('connect').onclick=()=>task(async()=>{if(!window.ethereum)throw Error('Ouvre cette page dans un navigateur disposant de MetaMask');await ethereum.request({method:'eth_requestAccounts'});await ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0xaa36a7'}]});const p=new ethers.BrowserProvider(ethereum);signer=await p.getSigner();account=await signer.getAddress();$('account').textContent='Compte connecté : '+account;if($('contract').value.trim())await load()});
+if(window.ethereum){ethereum.on('accountsChanged',()=>{signer=null;account='';$('account').textContent='Compte changé : reconnecte MetaMask.';$('trainer').hidden=true;draw()});ethereum.on('chainChanged',()=>{signer=null;status('Réseau changé : reconnecte MetaMask sur Sepolia.')})}
+$('proposeSwap').onclick=()=>task(()=>send(async c=>{const block=await read.getBlock('latest');return c.proposeSwap(n('give'),n('take'),block.timestamp+3600)}));
+$('checkSwap').onclick=()=>task(async()=>{if(!nft)throw Error('Charge une collection');const s=await nft.swaps(n('swapId'));$('swapInfo').textContent='Proposant '+s.proposer+' → destinataire '+s.target+' ; carte '+s.give+' contre '+s.take+' ; '+(await nft.swapValid(n('swapId'))?'offre active':'offre invalide ou expirée')});
+$('acceptSwap').onclick=()=>task(()=>send(c=>c.acceptSwap(n('swapId'))));$('cancelSwap').onclick=()=>task(()=>send(c=>c.cancelSwap(n('swapId'))));
+$('proposePair').onclick=()=>task(()=>send(c=>c.proposePair(n('pairX'),n('pairY'))));$('finalize').onclick=()=>task(()=>send(c=>c.finalizeBallot()));
+$('prepare').onclick=()=>task(()=>send(c=>c.prepare($('learners').value.trim().split(/[\s,;]+/).map(ethers.getAddress),n('jokerX'),n('jokerY'))));$('request').onclick=()=>task(()=>send(c=>c.requestDraw()));$('distribute').onclick=()=>task(()=>send(c=>c.distribute()));$('pause').onclick=()=>task(()=>send(c=>c.setPaused(true)));$('resume').onclick=()=>task(()=>send(c=>c.setPaused(false)));$('recover').onclick=()=>task(async()=>{if(!confirm('Clôturer la session et reprendre toutes les cartes sans remboursement en SMZF ?'))return;await send(c=>c.closeAndRecover())});$('startVote').onclick=()=>task(()=>send(c=>c.startBallot(n('proposalMinutes')*60,n('voteMinutes')*60,n('quorum')*100)));
+$('fund').onclick=()=>task(async()=>{if(!signer||!same(account,trainer))throw Error('Formateur uniquement');const t=new ethers.Contract(token,tokenABI,signer);const count=Number(await nft.participantCount());const value=amount($('grant').value);if(value<=0n)throw Error('Dotation positive requise');if(!confirm('Distribuer '+ethers.formatUnits(value,18)+' SMZF à chacun des '+count+' apprenants ?'))return;for(let i=0;i<count;i++){status('Dotation '+(i+1)+'/'+count+' : confirme dans MetaMask');await(await t.transfer(await nft.participants(i),value)).wait()}status('Dotations confirmées.')});
+const DEFAULT_COLLECTION='0xfBE3817bF7E21De624C2e9E7F8fEbF4997e1c9D2';
+$('contract').value=DEFAULT_COLLECTION.toLowerCase();
+task(load);
+</script></body></html>
