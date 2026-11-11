@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les 9 Clans du Polar — Jeu sur Sepolia</title>
+<link rel="stylesheet" href="maquette.css?v=10">
+</head>
+<body data-page="jeu">
+<main>
+<header><span class="eyebrow">Smartz Formation · Séances 5 et 6</span><div class="row"><span class="badge">Sepolia</span><button id="reset" hidden>Réinitialiser</button></div></header>
+<div class="hero"><h1>Les 9 Clans du Polar</h1><p class="muted">Séance 5 · Jeu des apprenants</p></div>
+<section class="info" aria-label="Contrat JeuPolar sur Sepolia">
+<h2>Contrat JeuPolar sur Sepolia</h2>
+<button type="button" id="connect-polar">Vérifier avec MetaMask</button>
+<p id="polar-status" role="status">En attente de connexion.</p>
+<p id="polar-round-status"></p>
+<p id="polar-market-balance"></p>
+</section>
+<nav class="nav" aria-label="Jeu sur Sepolia">
+<button type="button" id="polar-hand-tab" aria-controls="polar-hand-panel" aria-current="true">Ma main</button>
+<button type="button" id="polar-market-tab" aria-controls="polar-market-panel" aria-current="false">Marché</button>
+</nav>
+<p id="polar-market-status" class="info" role="status"></p>
+<section class="panel" id="polar-hand-panel">
+<h2>Ma main</h2>
+<p id="polar-hand-count">Connecte MetaMask pour afficher tes cartes.</p>
+<fieldset class="polar-cards" aria-label="Vendre mes cartes" id="polar-hand" disabled>
+<div class="cards" id="polar-hand-list"></div>
+</fieldset>
+</section>
+<section class="panel" id="polar-market-panel" hidden>
+<h2>Marché</h2>
+<p id="polar-market-empty">Connecte MetaMask pour afficher les annonces.</p>
+<fieldset class="polar-cards" aria-label="Acheter des cartes" id="polar-market" disabled>
+<div class="cards" id="polar-market-list"></div>
+</fieldset>
+<h3>Échanges de jokers</h3>
+<p>Un joker contre un autre, sans paiement.</p>
+<fieldset class="polar-cards" id="polar-jokers" aria-label="Échanger des jokers" disabled>
+<div id="polar-joker-list">Connecte MetaMask pour afficher les échanges.</div>
+</fieldset>
+</section>
+<section class="panel" id="polar-results" aria-label="Classements sur Sepolia" hidden></section>
+<details class="panel">
+<summary>Simulation locale · comptes de démonstration</summary>
+<div class="row"><label>Voir comme <select id="role"></select></label></div>
+<div id="stats" class="stats"></div>
+<nav id="nav" class="nav" aria-label="Écrans de la maquette"></nav>
+<p id="message" class="info" role="status"></p>
+<div id="screen"></div>
+</details>
+</main>
+<dialog id="dialog"><form id="dialog-form"><h2 id="dialog-title"></h2><div id="dialog-body"></div><div class="row"><button class="primary" type="submit">Confirmer la simulation</button><button id="cancel-dialog" type="button">Annuler</button></div></form></dialog>
+<script src="ethers.umd.min.js"></script>
+<script src="cartes.js"></script>
+<script src="polar-v2.js"></script>
+<script src="sepolia.js?v=10"></script>
+<script src="maquette.js"></script>
+</body>
+</html>

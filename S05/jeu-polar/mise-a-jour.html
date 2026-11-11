@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JeuPolar · Mise à jour V2</title>
+<link rel="stylesheet" href="maquette.css">
+</head>
+<body>
+<main>
+<h1>Mettre JeuPolar à jour sur Sepolia</h1>
+<p>La V2 ajoute la clôture anticipée et les échanges de jokers ouverts à tous les joueurs inscrits. L’adresse du jeu reste la même.</p>
+<p>Le contrat V1 exige une session fermée avant la mise à jour. Si une manche V1 est en cours, attends la fin du chrono et enregistre son classement depuis la <a href="formateur.html">page Formateur</a>.</p>
+<button id="verify">Vérifier avec MetaMask</button>
+<p id="upgrade-status" class="info" role="status">En attente de connexion.</p>
+<section class="panel" id="close-panel" hidden>
+<h2>Clôturer la session en cours</h2>
+<p>Le rappel final rend les cartes et les SMZF au portefeuille formateur. Les soldes de jeu de cette session sont soldés.</p>
+<div class="row">
+<button id="close-session" disabled>Clôturer la session</button>
+<button id="return-nft" disabled>Récupérer les NFT</button>
+<button id="return-smzf" disabled>Récupérer les SMZF</button>
+</div>
+</section>
+<section class="panel">
+<h2>Activer la V2</h2>
+<div class="row">
+<button id="deploy-v2" disabled>1. Déployer la logique V2</button>
+<button id="activate-v2" disabled>2. Activer la V2 sur le jeu existant</button>
+</div>
+<p id="logic-address"></p>
+</section>
+</main>
+<script src="ethers.umd.min.js"></script>
+<script src="polar-v2.js"></script>
+<script src="mise-a-jour.js"></script>
+</body>
+</html>

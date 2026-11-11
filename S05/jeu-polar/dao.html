@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Les 9 Clans du Polar — Maquette d’atelier</title>
+<link rel="stylesheet" href="maquette.css">
+</head>
+<body data-page="dao">
+<main>
+<header><span class="eyebrow">Smartz Formation · Séances 5 et 6</span><div class="row"><span class="badge">Simulation locale</span><button id="reset" hidden>Réinitialiser</button></div></header>
+<div class="hero"><h1>Les 9 Clans du Polar</h1><p class="muted">Séance 6 · Atelier DAO</p></div>
+<div class="row"><label>Voir comme <select id="role"></select></label><span class="muted">Comptes de démonstration</span></div>
+<section class="info" aria-label="Contrat JeuPolar sur Sepolia">
+<h2>Contrat JeuPolar sur Sepolia</h2>
+<p>Cette connexion lit le contrat. Les commandes de la maquette restent en simulation.</p>
+<button type="button" id="connect-polar">Vérifier avec MetaMask</button>
+<p id="polar-status" role="status">En attente de connexion.</p>
+</section>
+<div id="stats" class="stats"></div>
+<nav id="nav" class="nav" aria-label="Écrans de la maquette"></nav>
+<p id="message" class="info" role="status"></p>
+<div id="screen"></div>
+</main>
+<dialog id="dialog"><form id="dialog-form"><h2 id="dialog-title"></h2><div id="dialog-body"></div><div class="row"><button class="primary" type="submit">Confirmer la simulation</button><button id="cancel-dialog" type="button">Annuler</button></div></form></dialog>
+<script src="ethers.umd.min.js"></script>
+<script src="sepolia.js"></script>
+<script src="cartes.js"></script>
+<script src="maquette.js"></script>
+</body>
+</html>
