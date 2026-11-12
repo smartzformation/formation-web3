@@ -24,12 +24,12 @@
 <label for="polar-player-address">Adresse publique du joueur</label>
 <input id="polar-player-address" required placeholder="0x…" autocomplete="off" spellcheck="false">
 <button type="submit">Inscrire et créditer le joueur</button>
-<p>Essai à deux joueurs. Utilise deux adresses distinctes du wallet formateur.</p>
+<p>Inscris de 2 à 9 joueurs, avec des adresses distinctes du portefeuille formateur. Les inscriptions se modifient avant la distribution ou après la récupération des cartes.</p>
 </form>
 <p id="polar-enrollment-status" role="status"></p>
 <ul id="polar-player-list"></ul>
 <div id="polar-deal-panel" hidden>
-<button type="button" id="polar-deal">Distribuer les 10 cartes sur Sepolia</button>
+<button type="button" id="polar-deal">Distribuer les cartes sur Sepolia</button>
 <p id="polar-deal-status" role="status"></p>
 <form id="polar-start-round" hidden>
 <label for="polar-round-minutes">Durée de la manche en minutes</label>
@@ -57,7 +57,7 @@
 <dialog id="dialog"><form id="dialog-form"><h2 id="dialog-title"></h2><div id="dialog-body"></div><div class="row"><button class="primary" type="submit">Confirmer la simulation</button><button id="cancel-dialog" type="button">Annuler</button></div></form></dialog>
 <script src="ethers.umd.min.js"></script>
 <script src="polar-v2.js"></script>
-<script src="sepolia.js?v=10"></script>
+<script src="sepolia.js?v=11"></script>
 <script src="cartes.js"></script>
 <script src="maquette.js"></script>
 </body>

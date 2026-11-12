@@ -14,6 +14,8 @@
     'function version() view returns (uint256)',
     'function session() view returns (uint256)',
     'function sessionOpen() view returns (bool)',
+    'function closing() view returns (bool)',
+    'function removePlayer(address player)',
     'function openSession()',
     'function phase() view returns (uint8)',
     'function round() view returns (uint256)',
@@ -570,6 +572,7 @@
     hands?.replaceChildren();
     clearPlayerCards('Connecte MetaMask pour afficher les cartes.');
     if (enrollment) enrollment.hidden = true;
+    playerList?.replaceChildren();
     canOpenSession = false;
     updateSessionButton();
     nextCard = null;
@@ -591,6 +594,7 @@
     hands?.replaceChildren();
     clearPlayerCards('Lecture des cartes…');
     if (enrollment) enrollment.hidden = true;
+    playerList?.replaceChildren();
     canOpenSession = false;
     updateSessionButton();
     nextCard = null;
@@ -628,15 +632,34 @@
       else clearPlayerCards('Aucune session ouverte.');
       if (attempt !== revision) return;
       if (playerHand) button.textContent = 'Actualiser depuis Sepolia';
-      if (dealPanel) dealPanel.hidden = !isOpen || players.length !== 2 || !isSameAddress(account, trainer);
       if (enrollment) {
+        const isTrainer = isSameAddress(account, trainer);
+        const [activeCards, closing] = isOpen && isTrainer
+          ? await Promise.all([game.activeCards(), game.closing()])
+          : [[], true];
+        if (attempt !== revision) return;
+        const canEditPlayers = isOpen && isTrainer && !closing && !activeCards.length;
+        if (dealPanel) dealPanel.hidden = !isOpen || !isTrainer || (players.length < 2 && !activeCards.length);
+        if (dealButton) dealButton.disabled = !canEditPlayers || players.length < 2;
         playerList.replaceChildren();
         for (const player of players) {
           const row = document.createElement('li');
           row.textContent = player;
+          if (canEditPlayers) {
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = 'Retirer';
+            remove.setAttribute('aria-label', 'Retirer ' + player);
+            remove.onclick = () => {
+              if (window.confirm('Retirer ce joueur ? Son solde SMZF de jeu revient au formateur. Il ne pourra être réinscrit que lors d’une nouvelle session.')) {
+                void confirmedAction(account, attempt, 'removePlayer', [player], enrollmentStatus);
+              }
+            };
+            row.append(' ', remove);
+          }
           playerList.append(row);
         }
-        enrollment.hidden = !isOpen || !isSameAddress(account, trainer) || players.length >= 2;
+        enrollment.hidden = !canEditPlayers || players.length >= 9;
       }
       if (register && isSameAddress(account, trainer) && !isOpen) {
         await refreshCatalogue(game, attempt);
@@ -770,11 +793,13 @@
         'function approve(address spender, uint256 amount) returns (bool)',
         'function balanceOf(address owner) view returns (uint256)',
       ], signer);
-      const [players, isOpen, amount, allowance, balance] = await Promise.all([
+      const [players, isOpen, amount, allowance, balance, activeCards, closing] = await Promise.all([
         game.playerList(), game.sessionOpen(), game.startingCredit(),
-        smzf.allowance(trainer, proxy), smzf.balanceOf(trainer),
+        smzf.allowance(trainer, proxy), smzf.balanceOf(trainer), game.activeCards(), game.closing(),
       ]);
-      if (!isOpen || players.length >= 2) throw Error('La session de test doit être ouverte et avoir une place libre.');
+      if (!isOpen || closing || activeCards.length || players.length >= 9) {
+        throw Error('Il faut une session ouverte, une place libre et aucune carte déjà distribuée.');
+      }
       if (players.some(address => isSameAddress(address, player))) throw Error('Ce joueur est déjà inscrit.');
       if (balance < amount) throw Error('Le solde SMZF du formateur est insuffisant.');
       if (attempt !== revision) return;
@@ -824,15 +849,21 @@
       const [players, activeCards, approved] = await Promise.all([
         game.playerList(), game.activeCards(), nft.isApprovedForAll(trainer, proxy),
       ]);
-      if (players.length !== 2 || activeCards.length) throw Error('La distribution exige deux joueurs et aucune carte déjà distribuée.');
-      const stock = await Promise.all(catalog.slice(0, 10).map(async card => {
-        const [stored, owner] = await Promise.all([game.catalogue(card.id), nft.ownerOf(card.id)]);
-        if (stored.family === 0n || !isSameAddress(owner, trainer)) throw Error('Carte n° ' + card.id + ' indisponible.');
-        return {id: card.id, family: Number(stored.family), role: Number(stored.role), joker: stored.joker};
-      }));
+      if (players.length < 2 || activeCards.length || !await game.sessionOpen() || await game.closing()) {
+        throw Error('Il faut une session ouverte, au moins deux joueurs et aucune carte déjà distribuée.');
+      }
+      const stock = [];
+      for (let index = 0; index < catalog.length; index += 8) {
+        const batch = await Promise.all(catalog.slice(index, index + 8).map(async card => {
+          const stored = await game.catalogue(card.id);
+          if (stored.family === 0n || !isSameAddress(await nft.ownerOf(card.id), trainer)) return null;
+          return {id: card.id, family: Number(stored.family), role: Number(stored.role), joker: stored.joker};
+        }));
+        if (attempt !== revision) return;
+        stock.push(...batch.filter(Boolean));
+      }
       const {proposeDeal} = await import('./distribution.mjs');
       const {families, recipients, size} = proposeDeal(stock, players);
-      if (size !== 5) throw Error('Deux clans complets de cinq cartes sont requis pour cet essai.');
       if (attempt !== revision) return;
       if (!approved) {
         dealStatus.textContent = 'Confirme dans MetaMask l’autorisation de gérer la collection POLAR9 pour le proxy JeuPolar.';
@@ -843,18 +874,18 @@
       if (attempt !== revision) return;
       await game.prepareRound.staticCall(families, recipients);
       if (attempt !== revision) return;
-      dealStatus.textContent = 'Confirme le dépôt et la distribution des 10 cartes dans MetaMask.';
+      dealStatus.textContent = 'Confirme le dépôt et la distribution des ' + recipients.length + ' cartes dans MetaMask.';
       const tx = await game.prepareRound(families, recipients);
       dealStatus.textContent = 'Distribution en attente · ' + tx.hash;
       if ((await tx.wait()).status !== 1) throw Error('Distribution non confirmée.');
       if (attempt !== revision) return;
-      await Promise.all([showHands(game, account, attempt, players), showRound(game, account, attempt)]);
-      if (attempt === revision) dealStatus.textContent = 'Distribution confirmée · 5 cartes par joueur, dont 1 joker.';
+      await verify(false);
+      if (attempt === revision) dealStatus.textContent = 'Distribution confirmée · ' + size + ' cartes par joueur, dont 1 joker.';
     } catch (error) {
       if (attempt === revision) dealStatus.textContent = error.shortMessage || error.message;
     } finally {
       button.disabled = false;
-      if (attempt === revision && !hands.children.length) dealButton.disabled = false;
+      if (attempt === revision && !dealPanel.hidden && !hands.children.length) dealButton.disabled = false;
     }
   };
   if (startRound) startRound.onsubmit = async event => {
