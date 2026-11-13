@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JeuPolar — Journal de la manche</title>
+<link rel="stylesheet" href="maquette.css?v=13">
+</head>
+<body>
+<main>
+<nav class="row page-links" aria-label="Navigation JeuPolar">
+<a href="jeu.html">Jeu des apprenants</a>
+<a href="formateur.html">Espace formateur</a>
+</nav>
+<div class="hero">
+<h1>Journal de la manche</h1>
+<p class="muted">Les NFT sont déposés dans le contrat. Ce journal indique à quel portefeuille chaque carte est attribuée dans le jeu.</p>
+</div>
+<button id="journal-refresh" type="button">Actualiser depuis Sepolia</button>
+<p id="journal-status" class="info" role="status"></p>
+<div id="journal-content" hidden>
+<section class="panel" aria-labelledby="journal-hands-title">
+<h2 id="journal-hands-title">Cartes par portefeuille</h2>
+<div id="journal-hands"></div>
+</section>
+<section class="panel" aria-labelledby="journal-moves-title">
+<h2 id="journal-moves-title">Mouvements</h2>
+<div class="scroll page-links">
+<table>
+<thead><tr><th scope="col">Date et heure</th><th scope="col">Opération</th><th scope="col">Carte</th><th scope="col">De</th><th scope="col">À</th><th scope="col">Prix</th><th scope="col">Transaction</th></tr></thead>
+<tbody id="journal-moves"></tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+<script src="ethers.umd.min.js"></script>
+<script src="cartes.js"></script>
+<script src="journal.js?v=1"></script>
+</body>
+</html>
