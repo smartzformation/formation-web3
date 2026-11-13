@@ -70,9 +70,6 @@
   const dealPanel = document.getElementById('polar-deal-panel');
   const dealButton = document.getElementById('polar-deal');
   const dealStatus = document.getElementById('polar-deal-status');
-  const hands = document.getElementById('polar-hands');
-  const handsPanel = document.getElementById('polar-hands-panel');
-  const refreshHands = document.getElementById('polar-refresh-hands');
   const roundStatus = document.getElementById('polar-round-status');
   const startRound = document.getElementById('polar-start-round');
   const startStatus = document.getElementById('polar-start-status');
@@ -435,40 +432,6 @@
     return node;
   };
 
-  async function showHands(game, account, attempt, players) {
-    if (playerHand) return showPlayerCards(game, account, attempt, players);
-    if (!hands || !isSameAddress(account, trainer)) return;
-    const blockTag = Math.max(await game.runner.getBlockNumber(), latestConfirmedBlock);
-    const atBlock = {blockTag};
-    const cards = await game.activeCards(atBlock);
-    const cardsByPlayer = new Map(players.map(player => [player.toLowerCase(), []]));
-    for (let index = 0; index < cards.length; index += 8) {
-      const batch = cards.slice(index, index + 8);
-      const owners = await Promise.all(batch.map(id => game.holder(id, atBlock)));
-      if (attempt !== revision) return;
-      owners.forEach((owner, offset) => cardsByPlayer.get(owner.toLowerCase())?.push(batch[offset]));
-    }
-    if (attempt !== revision) return;
-    hands.replaceChildren();
-    handsPanel.hidden = false;
-    if (!players.length) addText(hands, 'p', 'Aucun joueur inscrit à cette session.');
-    for (const [index, player] of players.entries()) {
-      const held = cardsByPlayer.get(player.toLowerCase());
-      const section = document.createElement('section');
-      section.className = 'panel';
-      const count = held.length + (held.length === 1 ? ' carte' : ' cartes');
-      addText(section, 'h3', 'Joueur ' + (index + 1) + ' · ' + count);
-      const address = addText(section, 'p', player);
-      address.className = 'muted';
-      address.style.overflowWrap = 'anywhere';
-      const grid = document.createElement('div');
-      grid.className = 'cards';
-      for (const id of held) grid.append(makeCardTile(id));
-      section.append(grid);
-      hands.append(section);
-    }
-  }
-
   function resetRound() {
     clearInterval(countdown);
     if (roundStatus) roundStatus.textContent = '';
@@ -607,8 +570,6 @@
     revision++;
     resetRound();
     if (dealPanel) dealPanel.hidden = true;
-    if (handsPanel) handsPanel.hidden = true;
-    hands?.replaceChildren();
     clearPlayerCards('Connecte MetaMask pour afficher les cartes.');
     if (enrollment) enrollment.hidden = true;
     playerList?.replaceChildren();
@@ -630,8 +591,6 @@
     button.disabled = true;
     resetRound();
     if (dealPanel) dealPanel.hidden = true;
-    if (handsPanel) handsPanel.hidden = true;
-    hands?.replaceChildren();
     clearPlayerCards('Lecture des cartes…');
     if (enrollment) enrollment.hidden = true;
     playerList?.replaceChildren();
@@ -668,7 +627,10 @@
       setStatus(status, 'JeuPolar V' + version + ' vérifié sur Sepolia. Wallet connecté ' + account
         + (isSameAddress(account, trainer) ? ' (formateur). ' : '. ')
         + (isOpen ? 'Session ' + session + ' ouverte · ' + players.length + ' joueur(s).' : 'Aucune session ouverte.'));
-      if (isOpen) await Promise.all([showHands(game, account, attempt, players), showRound(game, account, attempt)]);
+      if (isOpen) await Promise.all([
+        playerHand ? showPlayerCards(game, account, attempt, players) : undefined,
+        showRound(game, account, attempt),
+      ]);
       else clearPlayerCards('Aucune session ouverte.');
       if (attempt !== revision) return;
       if (playerHand) button.textContent = 'Actualiser depuis Sepolia';
@@ -719,9 +681,6 @@
   }
 
   button.onclick = () => verify(true);
-  if (refreshHands) refreshHands.onclick = () => {
-    if (!button.disabled) void verify(false);
-  };
   if (playerHand && wallet?.isMetaMask) {
     const initialRevision = revision;
     void Promise.all([
@@ -922,13 +881,12 @@
       setStatus(dealStatus, 'Distribution en attente · ' + tx.hash, 'pending');
       if ((await tx.wait()).status !== 1) throw Error('Distribution non confirmée.');
       if (attempt !== revision) return;
-      await verify(false);
       if (attempt === revision) setStatus(dealStatus, 'Distribution confirmée · ' + size + ' cartes par joueur, dont 1 joker.');
     } catch (error) {
       if (attempt === revision) setStatus(dealStatus, error.shortMessage || error.message, 'warning');
     } finally {
       button.disabled = false;
-      if (attempt === revision && !dealPanel.hidden && !hands.querySelector('.tile')) dealButton.disabled = false;
+      if (attempt === revision) await verify(false);
     }
   };
   if (startRound) startRound.onsubmit = async event => {

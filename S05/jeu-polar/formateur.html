@@ -25,7 +25,7 @@
 <label for="polar-player-address">Adresse publique du joueur</label>
 <input id="polar-player-address" required placeholder="0x…" autocomplete="off" spellcheck="false">
 <button type="submit">Inscrire et créditer le joueur</button>
-<p>Inscris de 2 à 9 joueurs, avec des adresses distinctes du portefeuille formateur. Les inscriptions se modifient avant la distribution ou après la récupération des cartes.</p>
+<p>Inscris les portefeuilles un par un, jusqu’à 9 joueurs. Chaque inscription confirmée augmente le compteur. Quand tous les joueurs sont inscrits (au moins 2), distribue les cartes. Les inscriptions se modifient avant la distribution ou après la récupération des cartes.</p>
 </form>
 <p id="polar-enrollment-status" role="status"></p>
 <ul id="polar-player-list"></ul>
@@ -55,16 +55,10 @@
 <p><a href="mise-a-jour.html">Clôturer la session, récupérer les actifs et gérer le contrat</a></p>
 </section>
 <section class="panel" id="polar-results" aria-label="Classements sur Sepolia" hidden></section>
-<section class="panel" id="polar-hands-panel" aria-labelledby="polar-hands-title" hidden>
-<div class="row"><h2 id="polar-hands-title">Cartes en main sur Sepolia</h2>
-<button type="button" id="polar-refresh-hands">Actualiser les mains</button></div>
-<p class="muted">Les cartes sont conservées par le contrat. La galerie indique à quel portefeuille chacune est attribuée dans le jeu.</p>
-<div id="polar-hands"></div>
-</section>
 </main>
 <script src="ethers.umd.min.js"></script>
 <script src="polar-v2.js"></script>
-<script src="sepolia.js?v=13"></script>
+<script src="sepolia.js?v=14"></script>
 <script src="cartes.js"></script>
 </body>
 </html>
