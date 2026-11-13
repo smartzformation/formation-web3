@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Les 9 Clans du Polar — Maquette d’atelier</title>
+<title>Les 9 Clans du Polar — Tableau de bord du formateur</title>
 <link rel="stylesheet" href="maquette.css">
 </head>
 <body data-page="formateur">
 <main>
-<header><span class="eyebrow">Smartz Formation · Séances 5 et 6</span><div class="row"><span class="badge">Simulation locale</span><button id="reset">Réinitialiser</button></div></header>
+<header><span class="eyebrow">Smartz Formation · Séance 5</span><span class="badge">Sepolia</span></header>
 <div class="hero"><h1>Les 9 Clans du Polar</h1><p class="muted">Séance 5 · Tableau de bord du formateur</p></div>
-<div class="row page-links"><a href="jeu.html">Ouvrir le jeu des apprenants</a><a href="dao.html">Ouvrir la DAO</a></div><select id="role" hidden></select>
+<div class="row page-links"><a href="jeu.html">Ouvrir le jeu des apprenants</a><a href="dao.html">Ouvrir la DAO</a></div>
 <section class="info" aria-label="Contrat JeuPolar sur Sepolia">
 <h2>Contrat JeuPolar sur Sepolia</h2>
-<p>Vérifie le contrat, enregistre le catalogue et ouvre la session sur Sepolia. Les commandes de jeu plus bas sont simulées.</p>
+<p>Connecte le portefeuille formateur pour gérer la session et suivre les cartes en jeu.</p>
 <button type="button" id="connect-polar">Vérifier avec MetaMask</button>
 <p id="polar-status" role="status">En attente de connexion.</p>
 <button type="button" id="register-polar" disabled>Enregistrer la prochaine carte</button>
@@ -32,12 +32,17 @@
 <button type="button" id="polar-deal">Distribuer les cartes sur Sepolia</button>
 <p id="polar-deal-status" role="status"></p>
 <form id="polar-start-round" hidden>
-<label for="polar-round-minutes">Durée de la manche en minutes</label>
-<input id="polar-round-minutes" type="number" min="1" max="120" step="1" value="30" required>
+<label for="polar-round-duration">Durée de la manche</label>
+<input id="polar-round-duration" type="number" min="1" step="1" value="30" required>
+<select id="polar-round-unit" aria-label="Unité de durée">
+<option value="60">Minutes</option>
+<option value="3600">Heures</option>
+<option value="86400">Jours</option>
+</select>
 <button type="submit">Démarrer la manche sur Sepolia</button>
 </form>
 <p id="polar-start-status" role="status"></p>
-<ul id="polar-hands"></ul>
+
 </div>
 <p id="polar-round-status"></p>
 <div id="polar-round-end" hidden>
@@ -46,19 +51,19 @@
 <button type="button" id="polar-finish-early" hidden>Terminer la manche maintenant</button>
 <p id="polar-end-status" role="status"></p>
 </div>
-<p><a href="mise-a-jour.html">Mise à jour du contrat sur Sepolia</a></p>
+<p><a href="mise-a-jour.html">Clôturer la session, récupérer les actifs et gérer le contrat</a></p>
 </section>
 <section class="panel" id="polar-results" aria-label="Classements sur Sepolia" hidden></section>
-<div id="stats" class="stats"></div>
-<nav id="nav" class="nav" aria-label="Écrans de la maquette"></nav>
-<p id="message" class="info" role="status"></p>
-<div id="screen"></div>
+<section class="panel" id="polar-hands-panel" aria-labelledby="polar-hands-title" hidden>
+<div class="row"><h2 id="polar-hands-title">Cartes en main sur Sepolia</h2>
+<button type="button" id="polar-refresh-hands">Actualiser les mains</button></div>
+<p class="muted">Les cartes sont conservées par le contrat. La galerie indique à quel portefeuille chacune est attribuée dans le jeu.</p>
+<div id="polar-hands"></div>
+</section>
 </main>
-<dialog id="dialog"><form id="dialog-form"><h2 id="dialog-title"></h2><div id="dialog-body"></div><div class="row"><button class="primary" type="submit">Confirmer la simulation</button><button id="cancel-dialog" type="button">Annuler</button></div></form></dialog>
 <script src="ethers.umd.min.js"></script>
 <script src="polar-v2.js"></script>
-<script src="sepolia.js?v=11"></script>
+<script src="sepolia.js?v=12"></script>
 <script src="cartes.js"></script>
-<script src="maquette.js"></script>
 </body>
 </html>

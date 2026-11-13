@@ -66,10 +66,13 @@
   const dealButton = document.getElementById('polar-deal');
   const dealStatus = document.getElementById('polar-deal-status');
   const hands = document.getElementById('polar-hands');
+  const handsPanel = document.getElementById('polar-hands-panel');
+  const refreshHands = document.getElementById('polar-refresh-hands');
   const roundStatus = document.getElementById('polar-round-status');
   const startRound = document.getElementById('polar-start-round');
   const startStatus = document.getElementById('polar-start-status');
-  const roundMinutes = document.getElementById('polar-round-minutes');
+  const roundDuration = document.getElementById('polar-round-duration');
+  const roundUnit = document.getElementById('polar-round-unit');
   const playerHand = document.getElementById('polar-hand');
   const handList = document.getElementById('polar-hand-list');
   const handCount = document.getElementById('polar-hand-count');
@@ -420,21 +423,44 @@
 
   }
 
-  async function showHands(game, account, attempt, players = []) {
+  const addText = (parent, tag, value) => {
+    const node = document.createElement(tag);
+    node.textContent = value;
+    parent.append(node);
+    return node;
+  };
+
+  async function showHands(game, account, attempt, players) {
     if (playerHand) return showPlayerCards(game, account, attempt, players);
-    if (!hands) return;
-    const cards = await game.activeCards();
-    const owners = await Promise.all(cards.map(id => game.holder(id)));
+    if (!hands || !isSameAddress(account, trainer)) return;
+    const blockTag = Math.max(await game.runner.getBlockNumber(), latestConfirmedBlock);
+    const atBlock = {blockTag};
+    const cards = await game.activeCards(atBlock);
+    const cardsByPlayer = new Map(players.map(player => [player.toLowerCase(), []]));
+    for (let index = 0; index < cards.length; index += 8) {
+      const batch = cards.slice(index, index + 8);
+      const owners = await Promise.all(batch.map(id => game.holder(id, atBlock)));
+      if (attempt !== revision) return;
+      owners.forEach((owner, offset) => cardsByPlayer.get(owner.toLowerCase())?.push(batch[offset]));
+    }
     if (attempt !== revision) return;
     hands.replaceChildren();
-    if (dealButton) dealButton.disabled = cards.length > 0;
-    const ownCards = cards.filter((id, index) => dealPanel || isSameAddress(owners[index], account));
-    for (const id of ownCards) {
-      const card = catalog.find(item => BigInt(item.id) === id);
-      const row = document.createElement('li');
-      const name = card ? card.clan + ' · ' + card.name + (card.number === 1 ? ' (joker)' : '') : 'NFT n° ' + id;
-      row.textContent = dealPanel ? name + ' → ' + owners[cards.indexOf(id)] : name;
-      hands.append(row);
+    handsPanel.hidden = false;
+    if (!players.length) addText(hands, 'p', 'Aucun joueur inscrit à cette session.');
+    for (const [index, player] of players.entries()) {
+      const held = cardsByPlayer.get(player.toLowerCase());
+      const section = document.createElement('section');
+      section.className = 'panel';
+      const count = held.length + (held.length === 1 ? ' carte' : ' cartes');
+      addText(section, 'h3', 'Joueur ' + (index + 1) + ' · ' + count);
+      const address = addText(section, 'p', player);
+      address.className = 'muted';
+      address.style.overflowWrap = 'anywhere';
+      const grid = document.createElement('div');
+      grid.className = 'cards';
+      for (const id of held) grid.append(makeCardTile(id));
+      section.append(grid);
+      hands.append(section);
     }
   }
 
@@ -463,12 +489,6 @@
     })));
     if (attempt !== revision) return;
 
-    const addText = (parent, tag, value) => {
-      const node = document.createElement(tag);
-      node.textContent = value;
-      parent.append(node);
-      return node;
-    };
     const compareGain = (a, b) => a.result.gain > b.result.gain ? -1 : a.result.gain < b.result.gain ? 1 : 0;
     const compareFamily = (a, b) => Number(b.result.eligible) - Number(a.result.eligible)
       || Number(b.result.cards - a.result.cards) || compareGain(a, b);
@@ -510,6 +530,15 @@
     resultsPanel.hidden = false;
   }
 
+  function formatRoundTime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor(seconds / 3600) % 24;
+    const minutes = Math.floor(seconds / 60) % 60;
+    const clock = String(minutes).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+    if (!days && !hours) return clock;
+    return (days ? days + ' j ' : '') + String(hours).padStart(2, '0') + ':' + clock;
+  }
+
   async function showRound(game, account, attempt) {
     if (!roundStatus) return;
     const [phase, round, deadline, remaining] = await Promise.all([
@@ -536,6 +565,10 @@
       recallButton.hidden = !(await game.activeCards()).length || attempt !== revision;
       recallButton.onclick = () => confirmedAction(account, attempt, 'recallRoundNFTs', [], endStatus);
     }
+    const endDate = new Date(Number(deadline) * 1000);
+    const end = phase === 2n && !Number.isNaN(endDate.getTime())
+      ? ' · Fin prévue le ' + endDate.toLocaleString('fr-FR', {dateStyle: 'medium', timeStyle: 'short'})
+      : '';
     function renderTime() {
       if (attempt !== revision) return 0;
       const seconds = phase === 3n ? Number(remaining)
@@ -550,9 +583,9 @@
           ? 'Terminer la manche après le chrono' : 'Terminer la manche sur Sepolia';
       }
       if (phase === 2n || phase === 3n) {
-        const time = Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+        const time = formatRoundTime(seconds);
         const label = phase === 3n ? 'en pause' : seconds ? 'en cours' : 'temps écoulé';
-        roundStatus.textContent = 'Manche ' + round + ' sur Sepolia · ' + label + ' · ' + time;
+        roundStatus.textContent = 'Manche ' + round + ' sur Sepolia · ' + label + ' · ' + time + end;
         if (phase === 2n && !seconds) clearInterval(countdown);
         return seconds;
       }
@@ -569,6 +602,7 @@
     revision++;
     resetRound();
     if (dealPanel) dealPanel.hidden = true;
+    if (handsPanel) handsPanel.hidden = true;
     hands?.replaceChildren();
     clearPlayerCards('Connecte MetaMask pour afficher les cartes.');
     if (enrollment) enrollment.hidden = true;
@@ -591,6 +625,7 @@
     button.disabled = true;
     resetRound();
     if (dealPanel) dealPanel.hidden = true;
+    if (handsPanel) handsPanel.hidden = true;
     hands?.replaceChildren();
     clearPlayerCards('Lecture des cartes…');
     if (enrollment) enrollment.hidden = true;
@@ -679,6 +714,9 @@
   }
 
   button.onclick = () => verify(true);
+  if (refreshHands) refreshHands.onclick = () => {
+    if (!button.disabled) void verify(false);
+  };
   if (playerHand && wallet?.isMetaMask) {
     const initialRevision = revision;
     void Promise.all([
@@ -885,15 +923,19 @@
       if (attempt === revision) dealStatus.textContent = error.shortMessage || error.message;
     } finally {
       button.disabled = false;
-      if (attempt === revision && !dealPanel.hidden && !hands.children.length) dealButton.disabled = false;
+      if (attempt === revision && !dealPanel.hidden && !hands.querySelector('.tile')) dealButton.disabled = false;
     }
   };
   if (startRound) startRound.onsubmit = async event => {
     event.preventDefault();
-    if (button.disabled || startRound.hidden || !roundMinutes.checkValidity()) return;
+    if (button.disabled || startRound.hidden || !roundDuration.reportValidity()) return;
     const attempt = revision;
     const submit = startRound.querySelector('button');
-    const duration = BigInt(roundMinutes.value) * 60n;
+    const duration = BigInt(roundDuration.valueAsNumber) * BigInt(roundUnit.value);
+    if (duration > 8640000000000n - BigInt(Math.ceil(Date.now() / 1000))) {
+      startStatus.textContent = 'Cette durée dépasse la date maximale que le navigateur peut afficher.';
+      return;
+    }
     button.disabled = true;
     submit.disabled = true;
     try {
