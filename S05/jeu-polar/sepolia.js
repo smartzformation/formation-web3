@@ -1,6 +1,11 @@
 'use strict';
 
 (() => {
+  function setStatus(element, message, state = '') {
+    element.dataset.state = state;
+    element.textContent = message;
+  }
+
   const proxy = '0x6b94f3f7eCa95E1425B2c86Bf666e4682910d19e';
   const implementation = '0x8A752577A64C5B0a140226927b7B488Fb6290E7b';
   const collection = '0xf335004227ccaF2ea0EF28C8D431B21260b29E42';
@@ -143,8 +148,8 @@
       }
     }
     canOpenSession = [...registeredByFamily.values()].filter(count => count === 5).length >= 2;
-    catalogStatus.textContent = (expected.length - missing) + ' / ' + expected.length + ' cartes enregistrées.'
-      + (nextCard ? ' Prochaine carte : n° ' + nextCard.id + ' · ' + nextCard.clan + ' · ' + nextCard.name + '.' : '');
+    setStatus(catalogStatus, (expected.length - missing) + ' / ' + expected.length + ' cartes enregistrées.'
+      + (nextCard ? ' Prochaine carte : n° ' + nextCard.id + ' · ' + nextCard.clan + ' · ' + nextCard.name + '.' : ''));
   }
 
   function updateSessionButton() {
@@ -164,22 +169,22 @@
       const game = new ethers.Contract(proxy, abi, await provider.getSigner(account));
       await game[method].staticCall(...args);
       if (attempt !== revision) return;
-      feedback.textContent = 'Confirme la transaction dans MetaMask.';
+      setStatus(feedback, 'Confirme la transaction dans MetaMask.', 'pending');
       const tx = await game[method](...args);
-      if (attempt === revision) feedback.textContent = 'Transaction en attente · ' + tx.hash;
+      if (attempt === revision) setStatus(feedback, 'Transaction en attente · ' + tx.hash, 'pending');
       const receipt = await tx.wait();
       if (receipt?.status !== 1) throw Error('Transaction non confirmée.');
       latestConfirmedBlock = Math.max(latestConfirmedBlock, receipt.blockNumber);
       if (attempt !== revision) return;
-      feedback.textContent = method === 'offerOpenSwap'
+      setStatus(feedback, method === 'offerOpenSwap'
         ? 'Proposition confirmée sur Sepolia. Retrouve-la dans Marché.'
-        : 'Transaction confirmée sur Sepolia.';
+        : 'Transaction confirmée sur Sepolia.');
       await verify(false);
     } catch (error) {
       if (attempt === revision) {
-        feedback.textContent = method === 'finishRound' && error.reason === 'Temps restant'
+        setStatus(feedback, method === 'finishRound' && error.reason === 'Temps restant'
           ? 'Attends le prochain bloc Sepolia, puis réessaie.'
-          : error.reason || error.shortMessage || error.message;
+          : error.reason || error.shortMessage || error.message, 'warning');
       }
     } finally {
       button.disabled = false;
@@ -393,7 +398,7 @@
             if (price <= 0n) throw Error('Saisis un prix supérieur à zéro.');
             void confirmedAction(account, attempt, 'listCard', [id, price], marketStatus);
           } catch (error) {
-            marketStatus.textContent = 'Saisis un prix valide supérieur à zéro.';
+            setStatus(marketStatus, 'Saisis un prix valide supérieur à zéro.', 'warning');
           }
         };
         tile.append(input, sell);
@@ -611,10 +616,10 @@
     updateSessionButton();
     nextCard = null;
     if (register) register.disabled = true;
-    status.textContent = 'Compte ou réseau modifié. Relance la vérification.';
+    setStatus(status, 'Compte ou réseau modifié. Relance la vérification.', 'warning');
     if (playerHand) {
       button.textContent = 'Vérifier avec MetaMask';
-      marketStatus.textContent = '';
+      setStatus(marketStatus, '');
     }
   }
 
@@ -634,7 +639,7 @@
     updateSessionButton();
     nextCard = null;
     if (register) register.disabled = true;
-    status.textContent = 'Lecture du contrat…';
+    setStatus(status, 'Lecture du contrat…', 'pending');
     let attempt = revision;
     try {
       if (!wallet?.isMetaMask) throw Error('Ouvre cette adresse locale dans le navigateur qui contient MetaMask.');
@@ -660,9 +665,9 @@
       }
       if (attempt !== revision) return;
       supportsV2 = version === 2n;
-      status.textContent = 'JeuPolar V' + version + ' vérifié sur Sepolia. Wallet connecté ' + account
+      setStatus(status, 'JeuPolar V' + version + ' vérifié sur Sepolia. Wallet connecté ' + account
         + (isSameAddress(account, trainer) ? ' (formateur). ' : '. ')
-        + (isOpen ? 'Session ' + session + ' ouverte · ' + players.length + ' joueur(s).' : 'Aucune session ouverte.');
+        + (isOpen ? 'Session ' + session + ' ouverte · ' + players.length + ' joueur(s).' : 'Aucune session ouverte.'));
       if (isOpen) await Promise.all([showHands(game, account, attempt, players), showRound(game, account, attempt)]);
       else clearPlayerCards('Aucune session ouverte.');
       if (attempt !== revision) return;
@@ -700,11 +705,11 @@
         await refreshCatalogue(game, attempt);
         if (attempt === revision) register.disabled = !nextCard || Boolean(pendingSession);
       } else if (register) {
-        catalogStatus.textContent = isOpen ? 'Le catalogue est verrouillé pendant une session.' : 'Enregistrement réservé au formateur.';
+        setStatus(catalogStatus, isOpen ? 'Le catalogue est verrouillé pendant une session.' : 'Enregistrement réservé au formateur.');
       }
     } catch (error) {
       if (attempt === revision) {
-        status.textContent = error.shortMessage || error.message;
+        setStatus(status, error.shortMessage || error.message, 'warning');
         clearPlayerCards('Lecture impossible. Relance la vérification.');
       }
     } finally {
@@ -748,10 +753,10 @@
         if (await game.sessionOpen()) throw Error('Le catalogue est verrouillé pendant une session.');
         const args = [card.id, card.family, card.role, card.joker];
         await game.registerCard.staticCall(...args);
-        catalogStatus.textContent = 'Vérifie la transaction dans MetaMask.';
+        setStatus(catalogStatus, 'Vérifie la transaction dans MetaMask.', 'pending');
         pendingTransaction = await game.registerCard(...args);
       }
-      catalogStatus.textContent = 'Attente de confirmation sur Sepolia… ' + pendingTransaction.hash;
+      setStatus(catalogStatus, 'Attente de confirmation sur Sepolia… ' + pendingTransaction.hash, 'pending');
       const receipt = await pendingTransaction.wait(1, 120000);
       pendingTransaction = null;
       if (!receipt || receipt.status !== 1) throw Error('Enregistrement non confirmé.');
@@ -760,7 +765,7 @@
       await refreshCatalogue(game, attempt);
     } catch (error) {
       if (error.receipt) pendingTransaction = null;
-      if (attempt === revision) catalogStatus.textContent = error.shortMessage || error.message;
+      if (attempt === revision) setStatus(catalogStatus, error.shortMessage || error.message, 'warning');
     } finally {
       registrationBusy = false;
       updateSessionButton();
@@ -784,11 +789,11 @@
       const game = new ethers.Contract(proxy, abi, await provider.getSigner(trainer));
       if (!pendingSession && !(await game.sessionOpen())) {
         await game.openSession.staticCall();
-        sessionStatus.textContent = 'Vérifie l’ouverture de session dans MetaMask.';
+        setStatus(sessionStatus, 'Vérifie l’ouverture de session dans MetaMask.', 'pending');
         pendingSession = await game.openSession();
       }
       if (pendingSession) {
-        sessionStatus.textContent = 'Attente de confirmation sur Sepolia… ' + pendingSession.hash;
+        setStatus(sessionStatus, 'Attente de confirmation sur Sepolia… ' + pendingSession.hash, 'pending');
         const receipt = await pendingSession.wait(1, 120000);
         pendingSession = null;
         if (!receipt || receipt.status !== 1) throw Error('Ouverture non confirmée.');
@@ -796,10 +801,10 @@
       if (attempt !== revision) return;
       if (!(await game.sessionOpen())) throw Error('La session reste fermée sur Sepolia.');
       await button.onclick();
-      sessionStatus.textContent = 'Session ouverte. Les joueurs pourront être inscrits à l’étape suivante.';
+      setStatus(sessionStatus, 'Session ouverte. Les joueurs pourront être inscrits à l’étape suivante.');
     } catch (error) {
       if (error.receipt) pendingSession = null;
-      if (attempt === revision) sessionStatus.textContent = error.shortMessage || error.message;
+      if (attempt === revision) setStatus(sessionStatus, error.shortMessage || error.message, 'warning');
     } finally {
       button.disabled = false;
       register.disabled = !nextCard || attempt !== revision || Boolean(pendingSession);
@@ -842,25 +847,25 @@
       if (balance < amount) throw Error('Le solde SMZF du formateur est insuffisant.');
       if (attempt !== revision) return;
       if (allowance < amount) {
-        enrollmentStatus.textContent = 'Confirme dans MetaMask l’autorisation de ' + ethers.formatUnits(amount, 18) + ' SMZF pour JeuPolar.';
+        setStatus(enrollmentStatus, 'Confirme dans MetaMask l’autorisation de ' + ethers.formatUnits(amount, 18) + ' SMZF pour JeuPolar.', 'pending');
         const approval = await smzf.approve(proxy, amount);
-        enrollmentStatus.textContent = 'Autorisation SMZF en attente · ' + approval.hash;
+        setStatus(enrollmentStatus, 'Autorisation SMZF en attente · ' + approval.hash, 'pending');
         if ((await approval.wait()).status !== 1) throw Error('Autorisation SMZF non confirmée.');
       }
       if (attempt !== revision) return;
       await game.enroll.staticCall(player);
       if (attempt !== revision) return;
-      enrollmentStatus.textContent = 'Confirme l’inscription du joueur dans MetaMask.';
+      setStatus(enrollmentStatus, 'Confirme l’inscription du joueur dans MetaMask.', 'pending');
       const tx = await game.enroll(player);
-      enrollmentStatus.textContent = 'Inscription en attente · ' + tx.hash;
+      setStatus(enrollmentStatus, 'Inscription en attente · ' + tx.hash, 'pending');
       if ((await tx.wait()).status !== 1) throw Error('Inscription non confirmée.');
       if (attempt !== revision) return;
       const credit = await game.balanceOf(player);
       playerInput.value = '';
-      enrollmentStatus.textContent = 'Joueur inscrit · ' + ethers.formatUnits(credit, 18) + ' SMZF crédités dans le jeu.';
+      setStatus(enrollmentStatus, 'Joueur inscrit · ' + ethers.formatUnits(credit, 18) + ' SMZF crédités dans le jeu.');
       await button.onclick();
     } catch (error) {
-      if (attempt === revision) enrollmentStatus.textContent = error.shortMessage || error.message;
+      if (attempt === revision) setStatus(enrollmentStatus, error.shortMessage || error.message, 'warning');
     } finally {
       submit.disabled = false;
       button.disabled = false;
@@ -904,23 +909,23 @@
       const {families, recipients, size} = proposeDeal(stock, players);
       if (attempt !== revision) return;
       if (!approved) {
-        dealStatus.textContent = 'Confirme dans MetaMask l’autorisation de gérer la collection POLAR9 pour le proxy JeuPolar.';
+        setStatus(dealStatus, 'Confirme dans MetaMask l’autorisation de gérer la collection POLAR9 pour le proxy JeuPolar.', 'pending');
         const approval = await nft.setApprovalForAll(proxy, true);
-        dealStatus.textContent = 'Autorisation POLAR9 en attente · ' + approval.hash;
+        setStatus(dealStatus, 'Autorisation POLAR9 en attente · ' + approval.hash, 'pending');
         if ((await approval.wait()).status !== 1) throw Error('Autorisation POLAR9 non confirmée.');
       }
       if (attempt !== revision) return;
       await game.prepareRound.staticCall(families, recipients);
       if (attempt !== revision) return;
-      dealStatus.textContent = 'Confirme le dépôt et la distribution des ' + recipients.length + ' cartes dans MetaMask.';
+      setStatus(dealStatus, 'Confirme le dépôt et la distribution des ' + recipients.length + ' cartes dans MetaMask.', 'pending');
       const tx = await game.prepareRound(families, recipients);
-      dealStatus.textContent = 'Distribution en attente · ' + tx.hash;
+      setStatus(dealStatus, 'Distribution en attente · ' + tx.hash, 'pending');
       if ((await tx.wait()).status !== 1) throw Error('Distribution non confirmée.');
       if (attempt !== revision) return;
       await verify(false);
-      if (attempt === revision) dealStatus.textContent = 'Distribution confirmée · ' + size + ' cartes par joueur, dont 1 joker.';
+      if (attempt === revision) setStatus(dealStatus, 'Distribution confirmée · ' + size + ' cartes par joueur, dont 1 joker.');
     } catch (error) {
-      if (attempt === revision) dealStatus.textContent = error.shortMessage || error.message;
+      if (attempt === revision) setStatus(dealStatus, error.shortMessage || error.message, 'warning');
     } finally {
       button.disabled = false;
       if (attempt === revision && !dealPanel.hidden && !hands.querySelector('.tile')) dealButton.disabled = false;
@@ -933,7 +938,7 @@
     const submit = startRound.querySelector('button');
     const duration = BigInt(roundDuration.valueAsNumber) * BigInt(roundUnit.value);
     if (duration > 8640000000000n - BigInt(Math.ceil(Date.now() / 1000))) {
-      startStatus.textContent = 'Cette durée dépasse la date maximale que le navigateur peut afficher.';
+      setStatus(startStatus, 'Cette durée dépasse la date maximale que le navigateur peut afficher.', 'warning');
       return;
     }
     button.disabled = true;
@@ -947,17 +952,17 @@
       const game = new ethers.Contract(proxy, abi, await provider.getSigner(trainer));
       await game.startRound.staticCall(duration);
       if (attempt !== revision) return;
-      startStatus.textContent = 'Confirme le démarrage de la manche dans MetaMask.';
+      setStatus(startStatus, 'Confirme le démarrage de la manche dans MetaMask.', 'pending');
       const tx = await game.startRound(duration);
-      startStatus.textContent = 'Démarrage en attente · ' + tx.hash;
+      setStatus(startStatus, 'Démarrage en attente · ' + tx.hash, 'pending');
       const receipt = await tx.wait();
       if (receipt?.status !== 1) throw Error('Démarrage non confirmé.');
       if (attempt !== revision) return;
-      startStatus.textContent = 'Démarrage confirmé sur Sepolia.';
+      setStatus(startStatus, 'Démarrage confirmé sur Sepolia.');
       startRound.hidden = true;
       await showRound(game, account, attempt);
     } catch (error) {
-      if (attempt === revision) startStatus.textContent = error.shortMessage || error.message;
+      if (attempt === revision) setStatus(startStatus, error.shortMessage || error.message, 'warning');
     } finally {
       submit.disabled = false;
       button.disabled = false;

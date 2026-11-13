@@ -4,3 +4,6 @@
 .polar-cards{min-inline-size:0;padding:0;margin:0;border:0}.polar-cards input{min-width:0;width:100%}
 
 #polar-joker-list .tile select{min-width:0;width:100%}
+
+[data-state="pending"]{color:var(--gold);font-weight:700}
+[data-state="warning"]{color:#ffab9d}

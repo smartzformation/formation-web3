@@ -1,6 +1,11 @@
 'use strict';
 
 (() => {
+  function setStatus(element, message, state = '') {
+    element.dataset.state = state;
+    element.textContent = message;
+  }
+
   const proxy = '0x6b94f3f7eCa95E1425B2c86Bf666e4682910d19e';
   const v1 = '0x8A752577A64C5B0a140226927b7B488Fb6290E7b';
   const slot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
@@ -88,14 +93,14 @@
         if (attempt !== generation) return;
         state = await read();
         if (attempt !== generation) return;
-        status.textContent = state.version === 2n ? 'JeuPolar V2 activé et vérifié sur Sepolia.'
+        setStatus(status, state.version === 2n ? 'JeuPolar V2 activé et vérifié sur Sepolia.'
           : state.open ? 'Session ouverte. Termine la manche si nécessaire, puis clôture la session et récupère les actifs.'
             : state.poll !== 0n ? 'Un vote est ouvert. Termine-le avant la mise à jour.'
-              : 'Session fermée. Tu peux déployer ou activer la V2.';
+              : 'Session fermée. Tu peux déployer ou activer la V2.');
       } catch (error) {
         if (attempt === generation) {
           state = null;
-          status.textContent = error.reason || error.shortMessage || error.message;
+          setStatus(status, error.reason || error.shortMessage || error.message, 'warning');
         }
       } finally {
         busy = false;
@@ -109,8 +114,10 @@
   for (const [id, method] of [['close-session','closeSession'], ['return-nft','recallNFTs'], ['return-smzf','recallSMZF']]) {
     node(id).onclick = run(async ({game}) => {
       await game[method].staticCall();
-      status.textContent = 'Confirme dans MetaMask.';
-      const receipt = await (await game[method]()).wait();
+      setStatus(status, 'Confirme dans MetaMask.', 'pending');
+      const tx = await game[method]();
+      setStatus(status, 'Transaction en attente sur Sepolia · ' + tx.hash, 'pending');
+      const receipt = await tx.wait();
       if (receipt?.status !== 1) throw Error('Transaction non confirmée.');
     });
   }
@@ -124,13 +131,13 @@
     if (current.address) return;
     let hash = current.hash;
     if (!hash) {
-      status.textContent = 'Confirme le déploiement de la logique V2 dans MetaMask.';
+      setStatus(status, 'Confirme le déploiement de la logique V2 dans MetaMask.', 'pending');
       const factory = new ethers.ContractFactory([], window.polarV2CreationCode, current.signer);
       const contract = await factory.deploy();
       hash = contract.deploymentTransaction().hash;
       localStorage.setItem(deploymentKey, hash);
     }
-    status.textContent = 'Déploiement en attente · ' + hash;
+    setStatus(status, 'Déploiement en attente · ' + hash, 'pending');
     const receipt = await current.provider.waitForTransaction(hash, 1, 120000);
     if (receipt?.status !== 1 || !receipt.contractAddress) throw Error('Déploiement non confirmé. Relance la vérification.');
   });
@@ -139,15 +146,17 @@
     requireReady(current);
     if (!current.address) throw Error('Déploie d’abord la logique V2.');
     await current.game.upgradeToAndCall.staticCall(current.address, '0x');
-    status.textContent = 'Confirme l’activation de la V2 dans MetaMask.';
-    const receipt = await (await current.game.upgradeToAndCall(current.address, '0x')).wait();
+    setStatus(status, 'Confirme l’activation de la V2 dans MetaMask.', 'pending');
+    const tx = await current.game.upgradeToAndCall(current.address, '0x');
+    setStatus(status, 'Transaction en attente sur Sepolia · ' + tx.hash, 'pending');
+    const receipt = await tx.wait();
     if (receipt?.status !== 1) throw Error('Activation non confirmée.');
   });
 
   function reset() {
     generation++;
     state = null;
-    status.textContent = 'Compte ou réseau modifié. Relance la vérification.';
+    setStatus(status, 'Compte ou réseau modifié. Relance la vérification.', 'warning');
     render();
   }
   wallet?.on('accountsChanged', reset);
