@@ -3,15 +3,18 @@
 (() => {
   const proxy = '0x6b94f3f7eCa95E1425B2c86Bf666e4682910d19e';
   const explorer = 'https://sepolia.etherscan.io';
-  const provider = new ethers.JsonRpcProvider('https://ethereum-sepolia-rpc.publicnode.com', 11155111);
-  const game = new ethers.Contract(proxy, [
+  const endpoints = [
+    'https://ethereum-sepolia-rpc.publicnode.com',
+    'https://sepolia.gateway.tenderly.co',
+  ];
+  const abi = [
     'function round() view returns (uint256)',
     'function phase() view returns (uint8)',
     'function participantsOf(uint256 round) view returns (address[])',
     'event RoundChanged(uint256 indexed round, uint8 phase, uint256 deadline)',
     'event HolderChanged(uint256 indexed round, uint256 indexed card, address indexed player)',
     'event Sale(uint256 indexed card, address indexed seller, address indexed buyer, uint256 price)',
-  ], provider);
+  ];
   const cards = new Map(catalog.map(card => [BigInt(card.id), card]));
   const byId = id => document.getElementById(id);
   const refresh = byId('journal-refresh');
@@ -34,7 +37,7 @@
     return card ? card.name + ' · ' + card.clan + ' · NFT ' + id : 'NFT ' + id;
   }
 
-  async function roundLogs(round, head) {
+  async function roundLogs(game, round, head) {
     const holders = game.filters.HolderChanged(round);
     const phases = game.filters.RoundChanged(round);
     const changes = [];
@@ -54,9 +57,9 @@
     throw Error('Le bloc de distribution de cette manche est introuvable.');
   }
 
-  async function readRound(round, head) {
+  async function readRound(game, provider, round, head) {
     const [{distribution, changes}, players] = await Promise.all([
-      roundLogs(round, head),
+      roundLogs(game, round, head),
       game.participantsOf(round, {blockTag: head}),
     ]);
     const sales = new Map();
@@ -124,6 +127,22 @@
     content.hidden = false;
   }
 
+  async function loadSnapshot(provider) {
+    const game = new ethers.Contract(proxy, abi, provider);
+    const head = await provider.getBlockNumber();
+    const atHead = {blockTag: head};
+    const [round, phase] = await Promise.all([game.round(atHead), game.phase(atHead)]);
+    if (phase === 0n || phase >= 4n) {
+      return {message: 'Aucune manche en cours. Le journal se remplit à la prochaine distribution.'};
+    }
+    const data = await readRound(game, provider, round, head);
+    const [currentRound, currentPhase] = await Promise.all([game.round(), game.phase()]);
+    if (currentRound !== round || currentPhase === 0n || currentPhase >= 4n) {
+      return {message: 'La manche a changé. Actualise le journal.'};
+    }
+    return {data, message: 'Manche ' + round + ' · données lues au bloc ' + head.toLocaleString('fr-FR')};
+  }
+
   async function load() {
     refresh.disabled = true;
     content.hidden = true;
@@ -132,24 +151,28 @@
     status.dataset.state = 'pending';
     status.textContent = 'Lecture de la manche sur Sepolia…';
     try {
-      const head = await provider.getBlockNumber();
-      const [round, phase] = await Promise.all([game.round({blockTag: head}), game.phase({blockTag: head})]);
-      if (phase === 0n || phase >= 4n) {
-        status.textContent = 'Aucune manche en cours. Le journal se remplit à la prochaine distribution.';
-      } else {
-        const data = await readRound(round, head);
-        const [currentRound, currentPhase] = await Promise.all([game.round(), game.phase()]);
-        if (currentRound !== round || currentPhase === 0n || currentPhase >= 4n) {
-          status.textContent = 'La manche a changé. Actualise le journal.';
-        } else {
-          render(data);
-          status.textContent = 'Manche ' + round + ' · données lues au bloc ' + head.toLocaleString('fr-FR');
+      let lastError;
+      for (const endpoint of endpoints) {
+        const request = new ethers.FetchRequest(endpoint);
+        request.timeout = 10000;
+        const provider = new ethers.JsonRpcProvider(request, 11155111);
+        try {
+          const snapshot = await loadSnapshot(provider);
+          if (snapshot.data) render(snapshot.data);
+          status.textContent = snapshot.message;
+          status.dataset.state = '';
+          return;
+        } catch (error) {
+          lastError = error;
+        } finally {
+          provider.destroy();
         }
+        status.textContent = 'Connexion Sepolia interrompue. Nouvelle tentative…';
       }
-      status.dataset.state = '';
+      throw lastError;
     } catch (error) {
       status.dataset.state = 'warning';
-      status.textContent = 'Lecture du journal impossible. Réessaie dans un instant.';
+      status.textContent = 'Impossible de charger les données de la manche sur Sepolia. Clique sur « Actualiser depuis Sepolia » pour réessayer.';
       console.error(error);
     } finally {
       refresh.disabled = false;
