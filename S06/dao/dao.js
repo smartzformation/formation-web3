@@ -115,7 +115,8 @@ async function send(label, submit) {
   status(label + ' · Confirmez dans le portefeuille.');
   const tx = await submit();
   status(label + ' · En attente de confirmation.');
-  await tx.wait();
+  const receipt = await tx.wait();
+  return receipt;
 }
 
 async function transact(label, submit) {
@@ -305,10 +306,41 @@ $('refresh').onclick = () => run(() => render());
 $('older').onclick = () => run(async () => { ++page; await render(); });
 $('newer').onclick = () => run(async () => { if (page) --page; await render(); });
 bindForm('idea', async () => {
-  const description = $('description').value.trim();
-  if (!description) throw Error('Saisissez une description.');
-  await transact('Dépôt de l’idée', () => dao.submitIdea(description, 0));
-  $('description').value = '';
+  const feedback = $('idea-status');
+  const field = $('description');
+  const button = $('submit-idea');
+  const description = field.value.trim();
+  if (!description || new TextEncoder().encode(description).length > 1024) {
+    feedback.textContent = 'Saisis une description ou raccourcis le texte.';
+    return;
+  }
+  button.disabled = true;
+  field.readOnly = true;
+  try {
+    feedback.textContent = 'Confirme le dépôt de ton idée dans MetaMask.';
+    const receipt = await send('Dépôt de l’idée', async () => {
+      const tx = await dao.submitIdea(description, 0);
+      feedback.textContent = 'Dépôt envoyé. En attente de confirmation sur Sepolia…';
+      return tx;
+    });
+    field.value = '';
+    page = 0n;
+    feedback.textContent = 'Idée enregistrée sur Sepolia. ';
+    const link = append(feedback, 'a', 'Voir la transaction');
+    link.href = 'https://sepolia.etherscan.io/tx/' + receipt.hash;
+    try {
+      await render('Dépôt de l’idée · Confirmé sur Sepolia.');
+    } catch {
+      status('Idée enregistrée. Clique sur Actualiser pour rafraîchir la liste.');
+    }
+  } catch (error) {
+    feedback.textContent = error.code === 'ACTION_REJECTED' || error.code === 4001
+      ? 'Dépôt annulé dans MetaMask. Ton texte est conservé.'
+      : 'Confirmation du dépôt indisponible. Ton texte est conservé. Vérifie ton activité dans MetaMask avant de réessayer.';
+  } finally {
+    button.disabled = false;
+    field.readOnly = false;
+  }
 });
 $('import-players').onclick = () => run(async () => {
   if (!provider || (await provider.getNetwork()).chainId !== chainId) {

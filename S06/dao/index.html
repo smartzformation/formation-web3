@@ -20,7 +20,7 @@ small{color:#b8ccd6}a{color:#a8dfd3}table{width:100%;text-align:left;border-coll
 td,th{padding:.35rem;border-bottom:1px solid #35515f}
 </style>
 <script defer src="../../S05/jeu-polar/ethers.umd.min.js"></script>
-<script defer src="dao.js?v=trainer-mode-1"></script>
+<script defer src="dao.js?v=idea-feedback-1"></script>
 </head>
 <body><main>
 <header><span class="label">Smartz Formation · Séance 6 · Sepolia</span><h1>Clans Polar DAO</h1>
@@ -31,10 +31,12 @@ td,th{padding:.35rem;border-bottom:1px solid #35515f}
 <button id="refresh" hidden>Actualiser</button>
 <p id="status" role="status" aria-live="polite">Vérification de la connexion à la DAO…</p></header>
 <section id="session" hidden><h2>Groupe en cours</h2><p id="facts"></p>
+<p>Le POLARVOTE est facultatif. Tout inscrit peut proposer et soutenir. Seuls les détenteurs peuvent voter, avec un quorum de trois votants.</p>
 <button id="buy" hidden>Acheter 1 POLARVOTE</button>
 <form id="idea" hidden>
 <label>Description <textarea id="description" maxlength="1024" required></textarea></label>
-<button>Déposer l’idée</button>
+<button id="submit-idea" type="submit">Déposer l’idée</button>
+<p id="idea-status" role="status" aria-live="polite"></p>
 </form></section>
 <section id="trainer" hidden><h2>Pilotage formateur</h2>
 <form id="start" hidden><button type="button" id="import-players">Reprendre les inscrits du jeu</button><label>Adresses des inscrits, une par ligne <textarea id="roster" required></textarea></label><button>Ouvrir le groupe</button></form>
