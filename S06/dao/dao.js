@@ -224,6 +224,10 @@ async function card(id, context) {
   const element = document.createElement('article');
   append(element, 'small', 'Groupe ' + idea.session + ' · Idée ' + id);
   append(element, 'h3', idea.description);
+  const targetMode = idea.action === 0n ? null : modes[Number(idea.action) - 1];
+  if (context.isTrainer) {
+    append(element, 'p', targetMode ? 'Type de proposition · POL-007 · ' + targetMode : 'Type de proposition · Idée pour le jeu');
+  }
   const current = context.open && context.session === idea.session;
   if (!ballot.deadline) {
     append(element, 'p', idea.supportCount + '/2 soutiens requis · ' + (
@@ -286,7 +290,7 @@ async function card(id, context) {
         if (ballot.application === 0n) action(element, 'Différer', () => transact('Décision différée', () => dao.recordApplication(id, false)));
         if (idea.action === 0n || context.active === 0n) {
           action(element, idea.action === 0n ? 'Consigner l’application' : 'Appliquer POL-007', async () => {
-            const prompt = idea.action === 0n ? 'Confirmez-vous avoir appliqué la décision dans le jeu ?' : 'Modifier le mode des prochains scrutins ?';
+            const prompt = idea.action === 0n ? 'Confirmez-vous avoir appliqué la décision dans le jeu ?' : 'Appliquer le mode ' + targetMode.toLowerCase() + ' aux prochains scrutins ?';
             if (window.confirm(prompt)) await transact('Décision appliquée', () => dao.recordApplication(id, true));
           });
         }
@@ -300,14 +304,10 @@ $('connect').onclick = () => run(() => connect(true));
 $('refresh').onclick = () => run(() => render());
 $('older').onclick = () => run(async () => { ++page; await render(); });
 $('newer').onclick = () => run(async () => { if (page) --page; await render(); });
-$('action').onchange = () => {
-  const advisory = $('action').value === '0';
-  show('description-label', advisory);
-  $('description').required = advisory;
-};
 bindForm('idea', async () => {
-  const kind = Number($('action').value);
-  await transact('Dépôt de l’idée', () => dao.submitIdea(kind ? '' : $('description').value.trim(), kind));
+  const description = $('description').value.trim();
+  if (!description) throw Error('Saisissez une description.');
+  await transact('Dépôt de l’idée', () => dao.submitIdea(description, 0));
   $('description').value = '';
 });
 $('import-players').onclick = () => run(async () => {
