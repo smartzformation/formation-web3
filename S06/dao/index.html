@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clans Polar · Atelier DAO</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui,sans-serif;background:#101b24;color:#ecf5fa}
+body{margin:0}main{max-width:960px;margin:auto;padding:3rem 1rem}
+header{margin-bottom:2rem}h1{font-size:clamp(2rem,6vw,4rem);line-height:1;margin:.45em 0}.label{color:#a8dfd3}
+section,article{padding:1.1rem 1.4rem;margin:1rem 0;background:#182a37;border:1px solid #35515f;border-radius:12px}
+article{background:#14232e}h2,h3{margin:.2rem 0 .7rem}p{overflow-wrap:anywhere}
+button,input,textarea,select{font:inherit;padding:.55rem .7rem;border:1px solid #7894a1;border-radius:6px}
+input,textarea,select{background:#14232e;color:inherit;box-sizing:border-box;max-width:100%}
+textarea{display:block;width:100%;margin:.35rem 0 .7rem}
+button{background:#a8dfd3;color:#102523;font-weight:650;cursor:pointer;margin:.25rem .35rem .25rem 0}
+button:disabled{opacity:.55;cursor:default}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #edd58c}
+label{display:block;margin:.4rem 0}.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+small{color:#b8ccd6}a{color:#a8dfd3}table{width:100%;text-align:left;border-collapse:collapse}
+td,th{padding:.35rem;border-bottom:1px solid #35515f}
+</style>
+<script defer src="../../S05/jeu-polar/ethers.umd.min.js"></script>
+<script defer src="dao.js"></script>
+</head>
+<body><main>
+<header><span class="label">Smartz Formation · Séance 6 · Sepolia</span><h1>Clans Polar DAO</h1>
+<p>Déposez une idée, recueillez deux soutiens et comparez les deux résultats d’un même scrutin.</p>
+<button id="connect" disabled>Connecter le portefeuille</button>
+<button id="refresh" hidden>Actualiser</button>
+<p id="status" role="status" aria-live="polite">Vérification de la connexion à la DAO…</p></header>
+<section id="session" hidden><h2>Groupe en cours</h2><p id="facts"></p>
+<button id="buy" hidden>Acheter 1 POLARVOTE</button>
+<form id="idea" hidden>
+<label>Type de proposition <select id="action"><option value="0">Idée pour le jeu</option><option value="1">POL-007 · Mode égalitaire</option><option value="2">POL-007 · Mode pondéré</option></select></label>
+<label id="description-label">Description <textarea id="description" maxlength="1024" required></textarea></label>
+<button>Déposer l’idée</button>
+</form></section>
+<section id="trainer" hidden><h2>Pilotage formateur</h2>
+<form id="start" hidden><label>Adresses des inscrits, une par ligne <textarea id="roster" required></textarea></label><button>Ouvrir le groupe</button></form>
+<form id="reward" hidden><label>Identifiant de la manche <input id="round" maxlength="120" required></label>
+<label>Portefeuille du gagnant <input id="winner" required></label><button>Attribuer 1 POLARVOTE</button></form>
+<button id="enable" hidden>Ouvrir les achats</button>
+<button id="reset" hidden>Clôturer le groupe et rappeler les jetons</button>
+</section>
+<section id="history" hidden><h2>Idées et résultats</h2><div id="entries"></div>
+<div class="row"><button id="newer" hidden>Plus récents</button><button id="older" hidden>Plus anciens</button></div></section>
+</main></body>
+</html>

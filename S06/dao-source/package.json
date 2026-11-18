@@ -1,0 +1,11 @@
+{
+  "name": "clans-polar-dao-v2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": { "test": "node test/run.cjs" },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.0.2",
+    "ganache": "7.9.2",
+    "solc": "0.8.24"
+  }
+}
