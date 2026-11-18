@@ -59,7 +59,7 @@ const seances=[
  {numero:3,titre:"Cryptomonnaies et portefeuilles",motsCles:"metamask sepolia wallet clé privée cryptomonnaie plateformes crypto meria deskoin bitstack bybit kraken swissborg coinbase",description:"Comprendre les cryptomonnaies, créer un portefeuille MetaMask et expérimenter les transactions sur Sepolia.",activite:"./S03/activite.html",plateformes:"./plateformes-crypto.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdX6zUTWmrc2lIloecpLTQ6lHledZmWLa7L5yHuo560DiuYHQ/viewform"} ,
  {numero:4,titre:"Des tokens fongibles aux NFT",motsCles:"defi nft smzf smzform uniswap swap échange jeton importation metamask sepolia",description:"Échanger des tokens fongibles sur Uniswap et découvrir les NFT : des tokens individuellement identifiables, comme des cartes numériques numérotées.",activite:"./S04/activite.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLScdc7oECuOTRLAnSInKc0whgOZCfvhoY9Dt09S5XFUO29iaJw/viewform",alt:"Trois jetons SMZF identiques, puis une carte numérique illustrée portant le numéro 016"},
  {numero:5,titre:"Smart contracts et applications décentralisées",motsCles:"smart contract dapp nft sepolia etherscan clans polar jeu jokers smzf",description:"Comprendre les smart contracts et les dApps à partir des NFT, puis découvrir le jeu des Clans du Polar sur Sepolia.",activite:"./S05/jeu-polar/jeu.html",quiz:"https://docs.google.com/forms/d/e/1FAIpQLSdpad-XCE4abFmPle9WlG2XEBP9WTsf9Yo1EanrjlnjFw36JQ/viewform",alt:"Jeu NFT Les 9 Clans du Polar sur Sepolia"}
- {numero:6,titre:"Clans Polar : du jeu à la gouvernance DAO",motsCles:"dao gouvernance vote polar vote polarvote sepolia clans polar propositions droits de vote",description:"Jouer à Clans Polar, formuler une proposition, voter avec les Polar Votes et distinguer le résultat de son application.",activite:"./S06/dao/",alt:"Illustration de Clans Polar et d’un vote collectif de gouvernance DAO"}
+ {numero:6,titre:"Clans Polar : du jeu à la gouvernance DAO",motsCles:"dao gouvernance vote polar vote polarvote sepolia clans polar propositions droits de vote",description:"Jouer à Clans Polar, formuler une proposition, voter avec les Polar Votes et distinguer le résultat de son application.",activite:"./S06/dao/",image:"./images/seance-06.jpg",alt:"Illustration de Clans Polar et d’un vote collectif de gouvernance DAO"}
 ];
 const cards=document.getElementById('cards'),search=document.getElementById('search'),count=document.getElementById('count'),empty=document.getElementById('empty');
 function afficher(){
@@ -68,7 +68,7 @@ function afficher(){
  cards.replaceChildren();
  for(const s of items){
   const card=document.createElement('article');card.className='card';
-  const thumb=document.createElement('img');thumb.className='thumb';thumb.src='./images/seance-'+String(s.numero).padStart(2,'0')+'.svg';thumb.alt=s.alt||('Illustration de la séance '+s.numero);thumb.loading='lazy';
+  const thumb=document.createElement('img');thumb.className='thumb';thumb.src=s.image||'./images/seance-'+String(s.numero).padStart(2,'0')+'.svg';thumb.alt=s.alt||('Illustration de la séance '+s.numero);thumb.loading='lazy';
   const num=document.createElement('div');num.className='num';num.textContent='SÉANCE '+String(s.numero).padStart(2,'0');
   const h=document.createElement('h2');h.textContent=s.titre;
   const desc=document.createElement('p');desc.className='description';desc.textContent=s.description||'';
