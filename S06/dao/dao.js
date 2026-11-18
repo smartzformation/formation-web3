@@ -1,6 +1,8 @@
 'use strict';
 
 const chainId = 11155111n;
+const gameAddress = '0x6b94f3f7eCa95E1425B2c86Bf666e4682910d19e';
+const gameAbi = ['function playerList() view returns (address[])'];
 const daoAbi = [
   'function trainer() view returns (address)',
   'function smzf() view returns (address)',
@@ -244,6 +246,18 @@ bindForm('idea', async () => {
   const kind = Number($('action').value);
   await transact('Dépôt de l’idée', () => dao.submitIdea(kind ? '' : $('description').value.trim(), kind));
   $('description').value = '';
+});
+$('import-players').onclick = () => run(async () => {
+  if (!provider || (await provider.getNetwork()).chainId !== chainId) {
+    throw Error('Reconnectez le portefeuille sur Sepolia.');
+  }
+  const game = new ethers.Contract(gameAddress, gameAbi, provider);
+  const players = (await game.playerList()).map(ethers.getAddress);
+  const roster = [...new Set(players)].filter(address => address !== account && address !== ethers.ZeroAddress);
+  if (!roster.length) throw Error('Aucun joueur inscrit à reprendre depuis le jeu.');
+  $('roster').value = roster.join('\n');
+  status(roster.length + ' joueur(s) repris du jeu. Vérifiez la liste avant d’ouvrir le groupe.'
+    + (roster.length < 3 ? ' Il faut au moins trois inscrits.' : ''));
 });
 bindForm('start', async () => {
   const roster = $('roster').value.split(/[\s,;]+/).filter(Boolean).map(address => ethers.getAddress(address));

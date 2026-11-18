@@ -20,7 +20,7 @@ small{color:#b8ccd6}a{color:#a8dfd3}table{width:100%;text-align:left;border-coll
 td,th{padding:.35rem;border-bottom:1px solid #35515f}
 </style>
 <script defer src="../../S05/jeu-polar/ethers.umd.min.js"></script>
-<script defer src="dao.js"></script>
+<script defer src="dao.js?v=roster-1"></script>
 </head>
 <body><main>
 <header><span class="label">Smartz Formation · Séance 6 · Sepolia</span><h1>Clans Polar DAO</h1>
@@ -36,7 +36,7 @@ td,th{padding:.35rem;border-bottom:1px solid #35515f}
 <button>Déposer l’idée</button>
 </form></section>
 <section id="trainer" hidden><h2>Pilotage formateur</h2>
-<form id="start" hidden><label>Adresses des inscrits, une par ligne <textarea id="roster" required></textarea></label><button>Ouvrir le groupe</button></form>
+<form id="start" hidden><button type="button" id="import-players">Reprendre les inscrits du jeu</button><label>Adresses des inscrits, une par ligne <textarea id="roster" required></textarea></label><button>Ouvrir le groupe</button></form>
 <form id="reward" hidden><label>Identifiant de la manche <input id="round" maxlength="120" required></label>
 <label>Portefeuille du gagnant <input id="winner" required></label><button>Attribuer 1 POLARVOTE</button></form>
 <button id="enable" hidden>Ouvrir les achats</button>
