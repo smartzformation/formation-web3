@@ -22,6 +22,7 @@ const daoAbi = [
   'function snapshotWeight(uint256,address) view returns (uint256)',
   'function hasVoted(uint256,address) view returns (bool)',
   'function openSession(address[])',
+  'function roundRewarded(uint256,bytes32) view returns (bool)',
   'function rewardWinner(bytes32,address)',
   'function enablePurchases()',
   'function buyPolarVote()',
@@ -269,7 +270,18 @@ bindForm('start', async () => {
 bindForm('reward', async () => {
   const round = $('round').value.trim();
   if (!round) throw Error('Saisissez un identifiant de manche.');
-  await transact('Récompense du gagnant', () => dao.rewardWinner(ethers.id(round), ethers.getAddress($('winner').value.trim())));
+  const winner = ethers.getAddress($('winner').value.trim());
+  const roundId = ethers.id(round);
+  const session = await dao.session();
+  const [open, rewarded, registered, token] = await Promise.all([
+    dao.sessionOpen(), dao.roundRewarded(session, roundId), dao.registered(session, winner), dao.polarVote()
+  ]);
+  if (!open) throw Error('Ouvrez un groupe DAO avant d’attribuer la récompense.');
+  if (rewarded) throw Error('Cette manche a déjà été récompensée dans le groupe DAO.');
+  if (!registered) throw Error('Le portefeuille du gagnant ne figure pas parmi les inscrits du groupe DAO.');
+  const reserve = new ethers.Contract(token, tokenAbi, provider);
+  if ((await reserve.balanceOf(account)) === 0n) throw Error('La réserve de POLARVOTE est vide.');
+  await transact('Récompense du gagnant', () => dao.rewardWinner(roundId, winner));
 });
 $('enable').onclick = () => run(() => transact('Ouverture des achats', () => dao.enablePurchases()));
 $('reset').onclick = () => run(async () => {
