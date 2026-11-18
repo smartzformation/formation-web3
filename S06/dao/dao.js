@@ -227,6 +227,7 @@ async function card(id, context) {
   append(element, 'h3', idea.description);
   const targetMode = idea.action === 0n ? null : modes[Number(idea.action) - 1];
   if (context.isTrainer) {
+    append(element, 'p', 'Déposée par le portefeuille ' + idea.proposer);
     append(element, 'p', targetMode ? 'Type de proposition · POL-007 · ' + targetMode : 'Type de proposition · Idée pour le jeu');
   }
   const current = context.open && context.session === idea.session;
