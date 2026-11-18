@@ -20,7 +20,7 @@ small{color:#b8ccd6}a{color:#a8dfd3}table{width:100%;text-align:left;border-coll
 td,th{padding:.35rem;border-bottom:1px solid #35515f}
 </style>
 <script defer src="../../S05/jeu-polar/ethers.umd.min.js"></script>
-<script defer src="dao.js?v=reward-1"></script>
+<script defer src="dao.js?v=distribution-1"></script>
 </head>
 <body><main>
 <header><span class="label">Smartz Formation · Séance 6 · Sepolia</span><h1>Clans Polar DAO</h1>
@@ -43,6 +43,13 @@ td,th{padding:.35rem;border-bottom:1px solid #35515f}
 <label>Portefeuille du gagnant <input id="winner" required></label><button>Attribuer 1 POLARVOTE</button></form>
 <button id="enable" hidden>Ouvrir les achats</button>
 <button id="reset" hidden>Clôturer le groupe et rappeler les jetons</button>
+<div id="distribution" hidden>
+<h3>Suivi des POLARVOTE du groupe</h3>
+<p id="distribution-status" aria-live="polite"></p>
+<div style="overflow-x:auto"><table id="distribution-table" hidden>
+<thead><tr><th scope="col">Portefeuille inscrit</th><th scope="col">Attribués</th><th scope="col">Achats confirmés</th><th scope="col">Solde actuel</th></tr></thead>
+<tbody id="distribution-rows"></tbody></table></div>
+</div>
 </section>
 <section id="history" hidden><h2>Idées et résultats</h2><div id="entries"></div>
 <div class="row"><button id="newer" hidden>Plus récents</button><button id="older" hidden>Plus anciens</button></div></section>

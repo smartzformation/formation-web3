@@ -3,7 +3,12 @@
 const chainId = 11155111n;
 const gameAddress = '0x6b94f3f7eCa95E1425B2c86Bf666e4682910d19e';
 const gameAbi = ['function playerList() view returns (address[])'];
+// Lower bound preceding the creation of the configured Sepolia DAO.
+const firstDaoBlock = 12150000;
 const daoAbi = [
+  'event SessionOpened(uint256 indexed session)',
+  'event WinnerRewarded(uint256 indexed session,bytes32 indexed round,address indexed winner)',
+  'event PolarVotePurchased(uint256 indexed session,address indexed player)', 
   'function trainer() view returns (address)',
   'function smzf() view returns (address)',
   'function polarVote() view returns (address)',
@@ -133,6 +138,7 @@ async function render(message) {
     + ' · ' + (isTrainer ? 'Formateur' : player ? 'Joueur inscrit' : 'Observateur') + ' · ' + balance + ' POLARVOTE';
   for (const id of ['session', 'history', 'refresh']) show(id, true);
   show('trainer', isTrainer);
+  show('distribution', isTrainer && open);
   show('start', isTrainer && !open);
   show('reward', isTrainer && open);
   show('enable', isTrainer && open && !purchases);
@@ -144,14 +150,70 @@ async function render(message) {
   const items = [];
   if (active && (active < low || active > end)) items.push(active);
   for (let id = end; id >= low; --id) items.push(id);
-  const cards = await Promise.all(items.map(id => card(id, {
-    session, open, isTrainer, player, active, timestamp: BigInt(block.timestamp)
-  })));
+  const [cards] = await Promise.all([
+    Promise.all(items.map(id => card(id, {
+      session, open, isTrainer, player, active, timestamp: BigInt(block.timestamp)
+    }))),
+    isTrainer && open ? renderDistribution(session, block.number, token, purchases, stock) : undefined
+  ]);
   $('entries').replaceChildren(...cards);
   if (!cards.length) append($('entries'), 'p', 'Aucune idée déposée.');
   show('older', end > pageSize);
   show('newer', page > 0n);
   status(message || 'Connecté sur Sepolia · ' + account);
+}
+
+async function renderDistribution(session, latest, token, purchases, stock) {
+  const message = $('distribution-status');
+  message.textContent = 'Lecture des confirmations Sepolia…';
+  show('distribution-table', false);
+  try {
+    let opened;
+    for (let end = latest; end >= firstDaoBlock && !opened; end -= 2000) {
+      const start = Math.max(firstDaoBlock, end - 1999);
+      [opened] = await dao.queryFilter(dao.filters.SessionOpened(session), start, end);
+    }
+    if (!opened) throw Error('Ouverture du groupe introuvable.');
+    const transaction = await provider.getTransaction(opened.transactionHash);
+    const roster = dao.interface.decodeFunctionData('openSession', transaction.data)[0];
+    const events = [];
+    const topics = [
+      ['WinnerRewarded', 'PolarVotePurchased'].map(name => dao.interface.getEvent(name).topicHash),
+      ethers.toBeHex(session, 32)
+    ];
+    for (let fromBlock = opened.blockNumber; fromBlock <= latest; fromBlock += 2000) {
+      const toBlock = Math.min(fromBlock + 1999, latest);
+      events.push(...await provider.getLogs({ address: daoAddress, topics, fromBlock, toBlock }));
+    }
+    const rows = await Promise.all(roster.map(async address => {
+      const row = document.createElement('tr');
+      append(row, 'td', address);
+      const rewards = [];
+      const buys = [];
+      for (const log of events) {
+        const event = dao.interface.parseLog(log);
+        if (event.name === 'WinnerRewarded' && event.args.winner === address) rewards.push(log);
+        if (event.name === 'PolarVotePurchased' && event.args.player === address) buys.push(log);
+      }
+      for (const entries of [rewards, buys]) {
+        const cell = append(row, 'td', entries.length ? '' : '0');
+        if (entries.length) {
+          const link = append(cell, 'a', String(entries.length));
+          link.href = 'https://sepolia.etherscan.io/tx/' + entries.at(-1).transactionHash;
+          link.setAttribute('aria-label', entries.length + ' · Voir la dernière transaction sur Sepolia');
+        }
+      }
+      append(row, 'td', await token.balanceOf(address, { blockTag: latest }));
+      return row;
+    }));
+    $('distribution-rows').replaceChildren(...rows);
+    show('distribution-table', true);
+    message.textContent = purchases && stock
+      ? 'Achats ouverts à ces inscrits · ' + stock + ' POLARVOTE en réserve.'
+      : purchases ? 'Réserve épuisée.' : 'Ces inscrits pourront acheter à l’ouverture des achats.';
+  } catch {
+    message.textContent = 'Suivi Sepolia indisponible. Clique sur Actualiser pour réessayer.';
+  }
 }
 
 async function card(id, context) {
