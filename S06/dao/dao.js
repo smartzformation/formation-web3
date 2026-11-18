@@ -23,7 +23,7 @@ const daoAbi = [
   'function rewardWinner(bytes32,address)',
   'function enablePurchases()',
   'function buyPolarVote()',
-  'function submitIdea(string,uint8)',
+  'function submitIdea(string,uint8) returns (uint256 id)',
   'function supportIdea(uint256)',
   'function openBallot(uint256,uint64)',
   'function castVote(uint256,bool)',
